@@ -54,15 +54,15 @@ function calc(o,tipo,consumo,mese,spR,acc,alt,totA){
   if(tipo==="luce"){const p=m.pun,cP=consumo*(1+PERD),pr=p+m.disp+m.cm+o.spread,spC=cP*pr,imp=spC+o.qfix+spR+acc+alt,iv=(spC+o.qfix+spR+alt)*IVA_R;return{...o,pun:p,disp:m.disp,cm:m.cm,spC,tot:imp+iv,risp:totA-(imp+iv),iv,cP,pKwh:pr*(1+PERD)};}
   else{const p=m.psv,pr=p+o.spread+PCS,spC=consumo*pr,imp=spC+o.qfix+spR+acc+alt,iv=(spC+o.qfix+spR+alt)*IVA_R;return{...o,psv:p,spC,tot:imp+iv,risp:totA-(imp+iv),iv,cP:consumo,pKwh:pr};}
 }
-const fm=n=>(n??0).toLocaleString("it-IT",{minimumFractionDigits:2,maximumFractionDigits:2})+" â¬";
+const fm=n=>(n??0).toLocaleString("it-IT",{minimumFractionDigits:2,maximumFractionDigits:2})+" €";
 const f4=n=>(n??0).toLocaleString("it-IT",{minimumFractionDigits:4,maximumFractionDigits:6});
 const fP=n=>(n??0).toLocaleString("it-IT",{minimumFractionDigits:1,maximumFractionDigits:1})+"%";
 
 /* ========== OCR PROMPT ========== */
-const OCR_PROMPT=`Analizza questa bolletta energetica italiana (potrebbe essere composta da piÃ¹ pagine/foto). Restituisci SOLO JSON valido:
+const OCR_PROMPT=`Analizza questa bolletta energetica italiana (potrebbe essere composta da più pagine/foto). Restituisci SOLO JSON valido:
 {"cliente":"","fornitoreAttuale":"","tipo":"luce|gas","segmento":"business|domestico","consumo":0,"spesaVenditaConsumi":0,"quotaFissaVendita":0,"speseRete":0,"accise":0,"iva":0,"altrePartite":0,"totaleBolletta":0,"mese":"YYYY-MM","potenza":"","prezzoUnitario":0,"pod_pdr":"","annotazioni":[]}
 Regole: spesaVenditaConsumi=SOLO vendita consumi. quotaFissaVendita=SOLO fissa vendita. speseRete=trasporto+distribuzione+oneri. accise=imposte no IVA. "Altri usi"=business.
-ANNOTAZIONI: inserisci nell'array OGNI voce anomala: canone RAI, penali, bonus, sconti, rateizzazioni, depositi cauzionali, voci una tantum. Formato: ["1. Canone RAI â¬18 - non conteggiato","2. ..."].
+ANNOTAZIONI: inserisci nell'array OGNI voce anomala: canone RAI, penali, bonus, sconti, rateizzazioni, depositi cauzionali, voci una tantum. Formato: ["1. Canone RAI €18 - non conteggiato","2. ..."].
 SOLO JSON, niente markdown.`;
 
 /* ========== DOC GENERATORS ========== */
@@ -74,16 +74,16 @@ function genDoc(sel,f,totAtt,consumo){
   return`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Offerta_${f.mese.replace("-","")}_${sel.cte}_${(f.cliente||"").replace(/[^a-zA-Z0-9]/g,"_").substring(0,20)}</title>
 <style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;color:#1a1a1a;background:#fff;font-size:11px;padding:28px 32px}@page{size:A4;margin:14mm 18mm}.hdr{display:flex;justify-content:space-between;margin-bottom:20px;padding-bottom:14px;border-bottom:3px solid #059669}.logo{font-size:24px;font-weight:900;color:#059669}.logo span{color:#222}.cb{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px 14px;margin-bottom:14px}.cn{font-size:15px;font-weight:800}.cd{font-size:10px;color:#555;margin-top:4px}.st{font-size:10px;font-weight:800;color:#059669;letter-spacing:2px;text-transform:uppercase;margin:16px 0 8px;padding-bottom:4px;border-bottom:1px solid #ddd}.cg{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}.cc{border-radius:8px;padding:12px;border:1px solid #ddd}.cl{font-size:9px;font-weight:700;letter-spacing:1px;margin-bottom:8px;text-transform:uppercase}.cl.r{color:#dc2626}.cl.g{color:#059669}.cr{display:flex;justify-content:space-between;font-size:10px;padding:3px 0;border-bottom:1px solid #f0f0f0}.ct{font-size:18px;font-weight:900;margin-top:10px;text-align:right}.ct.r{color:#dc2626}.ct.g{color:#059669}.sb{background:${sel.risp>0?"#059669":"#d97706"};border-radius:10px;padding:20px;text-align:center;color:#fff;margin-bottom:14px}.sa{font-size:30px;font-weight:900}.sp{font-size:13px;margin-top:3px}table.it{width:100%;border-collapse:collapse;margin-bottom:14px;font-size:10px}table.it th{background:#f8f8f8;padding:5px 8px;text-align:left;font-weight:700;border:1px solid #ddd}table.it td{padding:5px 8px;border:1px solid #ddd}.ft{margin-top:20px;font-size:7px;color:#bbb;text-align:center}</style></head><body>
 <div class="hdr"><div><div class="logo"><span>energy.</span>lab</div><div style="font-size:8px;color:#999;margin-top:3px;letter-spacing:2px">ANALISI COMPARATIVA POWER-IT</div></div><div style="text-align:right;font-size:10px;color:#666">Offerta ${isL?"Luce":"Gas"}<br/><b>Listino ${sel.cte}</b><br/>${meseN}</div></div>
-<div class="cb"><div class="cn">${f.cliente||"Cliente"}</div><div class="cd">Fornitore attuale: <b>${f.forn}</b> | ${isL?"Energia Elettrica":"Gas Naturale"} â ${f.seg} | Consumo: <b>${consumo.toLocaleString("it-IT")} ${u}</b></div></div>
-<div class="st">Comparazione â ${meseN}</div>
-<div class="cg"><div class="cc"><div class="cl r">Attuale â ${f.forn}</div><div class="cr"><span>Vendita consumi</span><b>${fm(parseFloat(f.spVC)||0)}</b></div><div class="cr"><span>Quota fissa</span><b>${fm(parseFloat(f.qfV)||0)}</b></div><div class="cr"><span>Rete+oneri</span><b>${fm(parseFloat(f.spR)||0)}</b></div><div class="cr"><span>Accise</span><b>${fm(parseFloat(f.acc)||0)}</b></div><div class="ct r">${fm(totAtt)}</div></div>
-<div class="cc"><div class="cl g">Energy.Lab â ${sel.cte}</div><div class="cr"><span>Vendita consumi</span><b>${fm(sel.spC)}</b></div><div class="cr"><span>Quota fissa</span><b>${fm(sel.qfix)}</b></div><div class="cr"><span>Rete+oneri</span><b>${fm(parseFloat(f.spR)||0)}</b></div><div class="cr"><span>Accise</span><b>${fm(parseFloat(f.acc)||0)}</b></div><div class="ct g">${fm(sel.tot)}</div></div></div>
+<div class="cb"><div class="cn">${f.cliente||"Cliente"}</div><div class="cd">Fornitore attuale: <b>${f.forn}</b> | ${isL?"Energia Elettrica":"Gas Naturale"} — ${f.seg} | Consumo: <b>${consumo.toLocaleString("it-IT")} ${u}</b></div></div>
+<div class="st">Comparazione — ${meseN}</div>
+<div class="cg"><div class="cc"><div class="cl r">Attuale — ${f.forn}</div><div class="cr"><span>Vendita consumi</span><b>${fm(parseFloat(f.spVC)||0)}</b></div><div class="cr"><span>Quota fissa</span><b>${fm(parseFloat(f.qfV)||0)}</b></div><div class="cr"><span>Rete+oneri</span><b>${fm(parseFloat(f.spR)||0)}</b></div><div class="cr"><span>Accise</span><b>${fm(parseFloat(f.acc)||0)}</b></div><div class="ct r">${fm(totAtt)}</div></div>
+<div class="cc"><div class="cl g">Energy.Lab — ${sel.cte}</div><div class="cr"><span>Vendita consumi</span><b>${fm(sel.spC)}</b></div><div class="cr"><span>Quota fissa</span><b>${fm(sel.qfix)}</b></div><div class="cr"><span>Rete+oneri</span><b>${fm(parseFloat(f.spR)||0)}</b></div><div class="cr"><span>Accise</span><b>${fm(parseFloat(f.acc)||0)}</b></div><div class="ct g">${fm(sel.tot)}</div></div></div>
 <div class="sb"><div class="sa">${fm(Math.abs(sel.risp))}</div><div class="sp">${sel.risp>0?`Risparmi il ${rP}% passando a Energy.Lab`:"Nessun risparmio"}</div></div>
 <div class="st">Dettagli offerta</div>
-<table class="it"><tr><th>Voce</th><th>Dettaglio</th></tr><tr><td>Listino</td><td><b>${sel.cte}</b></td></tr><tr><td>Prezzo</td><td><b>${f4(sel.pKwh)} â¬/${u}</b></td></tr><tr><td>Q.fissa</td><td>${fm(sel.qfix)}/mese</td></tr><tr><td>Durata</td><td>Tempo indeterminato</td></tr><tr><td>Recesso</td><td>Nessun onere</td></tr></table>
+<table class="it"><tr><th>Voce</th><th>Dettaglio</th></tr><tr><td>Listino</td><td><b>${sel.cte}</b></td></tr><tr><td>Prezzo</td><td><b>${f4(sel.pKwh)} €/${u}</b></td></tr><tr><td>Q.fissa</td><td>${fm(sel.qfix)}/mese</td></tr><tr><td>Durata</td><td>Tempo indeterminato</td></tr><tr><td>Recesso</td><td>Nessun onere</td></tr></table>
 ${sel.risp>0?`<table class="it"><tr><th>Proiezione</th><th>Importo</th></tr><tr><td>Risparmio mensile</td><td><b style="color:#059669">${fm(sel.risp)}</b></td></tr><tr><td>Risparmio annuale</td><td><b style="color:#059669;font-size:14px">${fm(sel.risp*12)}</b></td></tr></table>`:""}
 <div style="font-size:8px;color:#999;line-height:1.6">Documento indicativo. Prezzi basati su ${isL?"PUN":"PSV"} di ${meseN}, variabili mensilmente.</div>
-<div class="ft">Energy.Lab S.r.l. â P.IVA 13671680968 â Via A. Volta 91, Cornate d'Adda (MB)<br/>Generato il ${new Date().toLocaleDateString("it-IT")} â Analisi POWER-IT</div></body></html>`;
+<div class="ft">Energy.Lab S.r.l. — P.IVA 13671680968 — Via A. Volta 91, Cornate d'Adda (MB)<br/>Generato il ${new Date().toLocaleDateString("it-IT")} — Analisi POWER-IT</div></body></html>`;
 }
 
 /* ========== DOC INTERNO (provvigioni) ========== */
@@ -94,7 +94,7 @@ function genInternal(sel,f,totAtt,consumo,pwPct,agPct,saPct){
   const cA=consumo;
   const totP=sel.gettone+sel.provv*cA;
   const bimP=sel.provv*cA/6;
-  const r=(n)=>(n??0).toLocaleString("it-IT",{minimumFractionDigits:2,maximumFractionDigits:2})+" \u20ac";
+  const r=(n)=>(n??0).toLocaleString("it-IT",{minimumFractionDigits:2,maximumFractionDigits:2})+" €";
   const roles=[["POWER-IT",pwPct,"#059669"],["AGENTE",agPct,"#2563eb"],["SUB-AGENTE",saPct,"#d97706"]].filter(x=>x[1]>0);
   const rolesHtml=roles.map(([label,pct,col])=>`
     <tr style="background:${col}11"><td style="padding:6px 10px;font-weight:700;color:${col}">${label} (${pct}%)</td>
@@ -104,23 +104,23 @@ function genInternal(sel,f,totAtt,consumo,pwPct,agPct,saPct){
     <td style="padding:6px 10px;text-align:right;font-weight:700">${r(bimP*pct/100)}</td></tr>`).join("");
   return`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Interno_${f.mese.replace("-","")}_${sel.cte}_${(f.cliente||"").replace(/[^a-zA-Z0-9]/g,"_").substring(0,20)}</title>
 <style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;color:#1a1a1a;background:#fff;font-size:11px;padding:28px 32px}@page{size:A4;margin:14mm 18mm}table{width:100%;border-collapse:collapse;margin-bottom:16px}th{background:#f1f5f9;padding:6px 10px;text-align:left;font-weight:700;border:1px solid #ddd;font-size:9px;text-transform:uppercase;letter-spacing:1px}td{padding:6px 10px;border:1px solid #ddd;font-size:10px}.hdr{display:flex;justify-content:space-between;margin-bottom:20px;padding-bottom:14px;border-bottom:3px solid #dc2626}.logo{font-size:20px;font-weight:900;color:#dc2626}.st{font-size:10px;font-weight:800;color:#dc2626;letter-spacing:2px;text-transform:uppercase;margin:16px 0 8px;padding-bottom:4px;border-bottom:1px solid #ddd}.warn{background:#fef2f2;border:2px solid #dc2626;border-radius:8px;padding:10px;text-align:center;color:#dc2626;font-size:9px;font-weight:700;margin-bottom:14px}.ft{margin-top:20px;font-size:7px;color:#bbb;text-align:center}</style></head><body>
-<div class="hdr"><div><div class="logo">POWER-IT \u2014 DOC INTERNO</div><div style="font-size:8px;color:#999;margin-top:3px;letter-spacing:2px">RISERVATO \u2014 NON CONSEGNARE AL CLIENTE</div></div><div style="text-align:right;font-size:10px;color:#666">${meseN}<br/><b>Listino ${sel.cte}</b></div></div>
-<div class="warn">\u26a0 DOCUMENTO RISERVATO \u2014 SOLO USO INTERNO POWER-IT \u26a0</div>
+<div class="hdr"><div><div class="logo">POWER-IT — DOC INTERNO</div><div style="font-size:8px;color:#999;margin-top:3px;letter-spacing:2px">RISERVATO — NON CONSEGNARE AL CLIENTE</div></div><div style="text-align:right;font-size:10px;color:#666">${meseN}<br/><b>Listino ${sel.cte}</b></div></div>
+<div class="warn">⚠ DOCUMENTO RISERVATO — SOLO USO INTERNO POWER-IT ⚠</div>
 <div class="st">Dati cliente</div>
 <table><tr><th>Cliente</th><th>Fornitore attuale</th><th>Tipo</th><th>Segmento</th><th>Consumo</th></tr>
 <tr><td><b>${f.cliente||"N/D"}</b></td><td>${f.forn||"N/D"}</td><td>${isL?"Luce":"Gas"}</td><td>${f.seg}</td><td>${consumo.toLocaleString("it-IT")} ${u}</td></tr></table>
 <div class="st">Comparazione economica</div>
 <table><tr><th>Voce</th><th>Attuale (${f.forn})</th><th>Energy.Lab (${sel.cte})</th><th>Delta</th></tr>
 <tr><td>Totale bolletta</td><td style="text-align:right">${r(totAtt)}</td><td style="text-align:right">${r(sel.tot)}</td><td style="text-align:right;color:${sel.risp>0?"#059669":"#dc2626"};font-weight:700">${r(sel.risp)}</td></tr>
-<tr><td>Prezzo unitario (\u20ac/${u})</td><td style="text-align:right">\u2014</td><td style="text-align:right">${(sel.pKwh??0).toLocaleString("it-IT",{minimumFractionDigits:4,maximumFractionDigits:6})}</td><td></td></tr></table>
+<tr><td>Prezzo unitario (€/${u})</td><td style="text-align:right">—</td><td style="text-align:right">${(sel.pKwh??0).toLocaleString("it-IT",{minimumFractionDigits:4,maximumFractionDigits:6})}</td><td></td></tr></table>
 <div class="st">Provvigioni</div>
 <table><tr><th>Dettaglio</th><th>Gettone</th><th>Provv/anno</th><th>Totale anno</th><th>Bimestrale</th></tr>
 <tr style="font-weight:700;background:#f0fdf4"><td>TOTALE</td><td style="text-align:right">${r(sel.gettone)}</td><td style="text-align:right">${r(sel.provv*cA)}</td><td style="text-align:right">${r(totP)}</td><td style="text-align:right">${r(bimP)}</td></tr>
 ${rolesHtml}</table>
 <div class="st">Parametri listino ${sel.cte}</div>
-<table><tr><th>Spread</th><th>Q.Fissa</th><th>Gettone</th><th>Provv \u20ac/${u}</th><th>Tag</th></tr>
+<table><tr><th>Spread</th><th>Q.Fissa</th><th>Gettone</th><th>Provv €/${u}</th><th>Tag</th></tr>
 <tr><td>${sel.spread}</td><td>${r(sel.qfix)}/mese</td><td>${r(sel.gettone)}</td><td>${sel.provv}</td><td>${sel.tag}</td></tr></table>
-<div class="ft">POWER-IT \u2014 Documento interno riservato \u2014 ${new Date().toLocaleDateString("it-IT")}</div></body></html>`;
+<div class="ft">POWER-IT — Documento interno riservato — ${new Date().toLocaleDateString("it-IT")}</div></body></html>`;
 }
 
 /* ========== MAIN APP ========== */
@@ -253,7 +253,7 @@ function App(){
     <div style={bg}><div style={{maxWidth:500,margin:"0 auto"}}>
       <div style={{textAlign:"center",marginBottom:24}}>
         <img src="/logo.gif" alt="POWER-IT" style={{height:40,marginBottom:10,filter:"invert(1)"}}/>
-        <div style={{display:"inline-block",padding:"3px 10px",background:"#f0fdf4",border:"1px solid #bbf7d0",borderRadius:20,fontSize:8,color:"#059669",fontWeight:700,letterSpacing:2,marginBottom:8}}>POWER-IT Ã ENERGY.LAB</div>
+        <div style={{display:"inline-block",padding:"3px 10px",background:"#f0fdf4",border:"1px solid #bbf7d0",borderRadius:20,fontSize:8,color:"#059669",fontWeight:700,letterSpacing:2,marginBottom:8}}>POWER-IT × ENERGY.LAB</div>
         <div style={{fontSize:20,fontWeight:900}}>Energy Comparator</div>
         <div style={{fontSize:10,color:"#64748b",marginTop:4}}>Fotografa o carica la bolletta del cliente</div>
       </div>
@@ -261,12 +261,12 @@ function App(){
       {/* Camera buttons */}
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:16}}>
         <button onClick={()=>camRef.current?.click()} style={{...cd,padding:24,textAlign:"center",cursor:"pointer",border:"2px dashed #059669"}}>
-          <div style={{fontSize:28,marginBottom:6}}>ð·</div>
+          <div style={{fontSize:28,marginBottom:6}}>📷</div>
           <div style={{fontSize:12,fontWeight:700,color:"#059669"}}>FOTOGRAFA</div>
           <div style={{fontSize:9,color:"#94a3b8"}}>Apri fotocamera</div>
         </button>
         <button onClick={()=>fileRef.current?.click()} style={{...cd,padding:24,textAlign:"center",cursor:"pointer",border:"2px dashed #2563eb"}}>
-          <div style={{fontSize:28,marginBottom:6}}>ð</div>
+          <div style={{fontSize:28,marginBottom:6}}>📄</div>
           <div style={{fontSize:12,fontWeight:700,color:"#2563eb"}}>CARICA FILE</div>
           <div style={{fontSize:9,color:"#94a3b8"}}>PDF o immagine</div>
         </button>
@@ -284,7 +284,7 @@ function App(){
               {p.thumb==="PDF"
                 ?<div style={{width:"100%",height:"100%",background:"#fef2f2",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:700,color:"#dc2626"}}>PDF<br/>p.{i+1}</div>
                 :<img src={p.thumb} style={{width:"100%",height:"100%",objectFit:"cover"}}/>}
-              <button onClick={()=>removePhoto(i)} style={{position:"absolute",top:2,right:2,width:18,height:18,borderRadius:"50%",background:"#dc2626",color:"#fff",border:"none",fontSize:10,cursor:"pointer",lineHeight:"18px"}}>Ã</button>
+              <button onClick={()=>removePhoto(i)} style={{position:"absolute",top:2,right:2,width:18,height:18,borderRadius:"50%",background:"#dc2626",color:"#fff",border:"none",fontSize:10,cursor:"pointer",lineHeight:"18px"}}>×</button>
               <div style={{position:"absolute",bottom:0,left:0,right:0,background:"rgba(0,0,0,0.6)",color:"#fff",fontSize:8,textAlign:"center",padding:1}}>Pag {i+1}</div>
             </div>
           ))}
@@ -295,13 +295,13 @@ function App(){
           </button>
         </div>
         <button onClick={processPhotos} disabled={loading} style={{width:"100%",padding:14,background:"linear-gradient(135deg,#047857,#059669)",border:"none",borderRadius:10,color:"#fff",fontSize:14,fontWeight:800,cursor:"pointer"}}>
-          {loading?loadMsg:"ANALIZZA BOLLETTA â"}
+          {loading?loadMsg:"ANALIZZA BOLLETTA →"}
         </button>
       </div>}
 
       {/* Manual entry */}
       <div style={{textAlign:"center",margin:"14px 0"}}>
-        <div style={{fontSize:10,color:"#94a3b8"}}>â oppure â</div>
+        <div style={{fontSize:10,color:"#94a3b8"}}>— oppure —</div>
       </div>
       <button onClick={()=>setStep("review")} style={{width:"100%",padding:12,background:"#fff",border:"1px solid #d1d5db",borderRadius:10,color:"#475569",fontSize:12,fontWeight:600,cursor:"pointer"}}>
         Inserimento manuale dati bolletta
@@ -325,9 +325,9 @@ function App(){
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
         <div>
           <img src="/logo.gif" alt="POWER-IT" style={{height:24,filter:"invert(1)",marginBottom:4}}/>
-          <div style={{fontSize:14,fontWeight:800}}>{extracted?"Dati estratti â Verifica":"Inserimento manuale"}</div>
+          <div style={{fontSize:14,fontWeight:800}}>{extracted?"Dati estratti — Verifica":"Inserimento manuale"}</div>
         </div>
-        <button onClick={reset} style={bt}>â Indietro</button>
+        <button onClick={reset} style={bt}>← Indietro</button>
       </div>
       <div style={{...cd,padding:18}}>
         <div style={{marginBottom:12}}><label style={lb}>CLIENTE</label><input style={inp} value={f.cliente} onChange={e=>u("cliente",e.target.value)}/></div>
@@ -350,10 +350,10 @@ function App(){
           <div><label style={lb}>TOTALE</label><input type="number" step="0.01" style={inp} value={f.tot} onChange={e=>u("tot",e.target.value)}/></div>
         </div>
         {annotations.length>0&&<div style={{background:"#fffbeb",border:"1px solid #f59e0b",borderRadius:8,padding:12,marginBottom:14}}>
-          <div style={{fontSize:9,fontWeight:700,color:"#92400e",marginBottom:6}}>â  ANNOTAZIONI</div>
+          <div style={{fontSize:9,fontWeight:700,color:"#92400e",marginBottom:6}}>⚠ ANNOTAZIONI</div>
           {annotations.map((a,i)=><div key={i} style={{fontSize:10,color:"#78350f",padding:"3px 0"}}>{a}</div>)}
         </div>}
-        <button onClick={goSel} style={{width:"100%",padding:14,background:"linear-gradient(135deg,#047857,#059669)",border:"none",borderRadius:10,color:"#fff",fontSize:14,fontWeight:800,cursor:"pointer"}}>CONFRONTA LISTINI â</button>
+        <button onClick={goSel} style={{width:"100%",padding:14,background:"linear-gradient(135deg,#047857,#059669)",border:"none",borderRadius:10,color:"#fff",fontSize:14,fontWeight:800,cursor:"pointer"}}>CONFRONTA LISTINI →</button>
       </div>
     </div></div>
   );
@@ -373,19 +373,19 @@ function App(){
           </div>
           <div style={{display:"flex",gap:6}}><button onClick={()=>setStep("review")} style={bt}>Modifica</button><button onClick={reset} style={bt}>+ Nuova</button></div>
         </div>
-        <div style={{fontSize:11,color:"#64748b",marginBottom:12}}>{f.forn} | {f.tipo==="luce"?"â¡":"ð¥"} {f.seg} | {consumo.toLocaleString()} {f.tipo==="luce"?"kWh":"Smc"} | {f.mese} | Attuale: <b style={{color:"#dc2626"}}>{fm(totAtt)}</b></div>
+        <div style={{fontSize:11,color:"#64748b",marginBottom:12}}>{f.forn} | {f.tipo==="luce"?"⚡":"🔥"} {f.seg} | {consumo.toLocaleString()} {f.tipo==="luce"?"kWh":"Smc"} | {f.mese} | Attuale: <b style={{color:"#dc2626"}}>{fm(totAtt)}</b></div>
 
         {/* Listini table */}
         <div style={{...cd,padding:0,marginBottom:14,overflow:"auto"}}>
           <table style={{width:"100%",borderCollapse:"collapse",fontSize:11,minWidth:600}}>
-            <thead><tr style={{background:"#f0fdf4"}}>{["","CTE","SPR","QF","PREZZO","TOTALE","RISP","TOTâ¬"].map((h,i)=>
+            <thead><tr style={{background:"#f0fdf4"}}>{["","CTE","SPR","QF","PREZZO","TOTALE","RISP","TOT€"].map((h,i)=>
               <th key={i} style={{padding:"8px 4px",textAlign:i<2?"left":"right",color:"#059669",fontSize:8,fontWeight:700,borderBottom:"2px solid #bbf7d0"}}>{h}</th>)}</tr></thead>
             <tbody>{ac.map((c,i)=>{const is=selCte===c.cte,hr=c.risp>0;return(
               <tr key={i} onClick={()=>{setSelCte(c.cte);setDocReady(false);}} style={{background:is?"#f0fdf4":"#fff",cursor:"pointer",borderLeft:is?"3px solid #059669":"3px solid transparent"}}>
                 <td style={{padding:"7px 4px"}}><div style={{width:14,height:14,borderRadius:"50%",border:is?"2px solid #059669":"2px solid #cbd5e1",background:is?"#059669":"transparent"}}/></td>
                 <td style={{padding:"7px 4px"}}><b style={{fontSize:13}}>{c.cte}</b><br/><span style={{fontSize:8,color:"#94a3b8"}}>{c.tag}</span></td>
                 <td style={{padding:"7px 4px",textAlign:"right"}}>{c.spread}</td>
-                <td style={{padding:"7px 4px",textAlign:"right"}}>{c.qfix}â¬</td>
+                <td style={{padding:"7px 4px",textAlign:"right"}}>{c.qfix}€</td>
                 <td style={{padding:"7px 4px",textAlign:"right",fontWeight:700}}>{f4(c.pKwh)}</td>
                 <td style={{padding:"7px 4px",textAlign:"right",color:hr?"#059669":"#dc2626",fontWeight:700}}>{fm(c.tot)}</td>
                 <td style={{padding:"7px 4px",textAlign:"right",color:hr?"#059669":"#dc2626",fontWeight:700}}>{fm(c.risp)}</td>
@@ -396,7 +396,7 @@ function App(){
         {sel?<div style={{...cd,padding:16}}>
           {/* Buttons */}
           <div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
-            <button onClick={downloadDoc} style={{flex:1,padding:12,background:"#059669",border:"none",borderRadius:8,color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>â¬ PDF CLIENTE</button>
+            <button onClick={downloadDoc} style={{flex:1,padding:12,background:"#059669",border:"none",borderRadius:8,color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>⬇ PDF CLIENTE</button>
             <button onClick={downloadInternal} style={{flex:1,padding:12,background:"#dc2626",border:"none",borderRadius:8,color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>📋 DOC INTERNO</button>
           </div>
 
@@ -407,7 +407,7 @@ function App(){
               <div style={{fontSize:22,fontWeight:900,color:"#dc2626"}}>{fm(totAtt)}</div>
             </div>
             <div style={{background:"#f0fdf4",borderRadius:8,padding:12,border:"2px solid #059669"}}>
-              <div style={{fontSize:9,color:"#059669",fontWeight:700,marginBottom:4}}>ENERGY.LAB â {sel.cte}</div>
+              <div style={{fontSize:9,color:"#059669",fontWeight:700,marginBottom:4}}>ENERGY.LAB — {sel.cte}</div>
               <div style={{fontSize:22,fontWeight:900,color:"#059669"}}>{fm(sel.tot)}</div>
             </div>
           </div>
@@ -447,7 +447,7 @@ function App(){
           {/* Per-role breakdown */}
           {[["POWER-IT",pwPct,"#059669","rgba(5,150,105,0.06)"],["AGENTE",agPct,"#2563eb","rgba(37,99,235,0.06)"],["SUB-AGENTE",saPct,"#d97706","rgba(217,119,6,0.06)"]].filter(r=>r[1]>0).map(([label,pct,col,bgc],i)=>(
             <div key={i} style={{background:bgc,border:"2px solid "+col,borderRadius:10,padding:10,marginBottom:8}}>
-              <div style={{fontSize:10,fontWeight:700,color:col,marginBottom:6}}>{label} â {pct}%</div>
+              <div style={{fontSize:10,fontWeight:700,color:col,marginBottom:6}}>{label} — {pct}%</div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:4}}>
                 {[["Gettone",sel.gettone*pct/100],["Provv",sel.provv*cA*pct/100],["Tot anno",totP*pct/100],["Bimest.",bimP*pct/100]].map(([t,v],j)=>(
                   <div key={j} style={{textAlign:"center"}}>
