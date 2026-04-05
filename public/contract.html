@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Energy.Lab — Proposta di Fornitura</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#f0f4f0;color:#1a1a1a;font-size:13px;line-height:1.5}
+@media print{body{background:#fff;font-size:11px}header,.no-print{display:none!important}.page{box-shadow:none!important;margin:0!important;padding:20px!important;break-inside:avoid}.section{break-inside:avoid}input,select{border:none!important;border-bottom:1px solid #999!important;background:transparent!important;padding:2px 4px!important;font-size:10px!important}textarea{border:1px solid #999!important;background:transparent!important;font-size:9px!important}.print-only{display:block!important}}
+.print-only{display:none}
+header{background:linear-gradient(135deg,#2d7a3a,#4caf50);color:#fff;padding:16px 24px;text-align:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.15)}
+header h1{font-size:18px;font-weight:800;letter-spacing:1px}
+header p{font-size:11px;opacity:.85;margin-top:2px}
+.page{max-width:860px;margin:20px auto;background:#fff;border-radius:12px;box-shadow:0 2px 20px rgba(0,0,0,.08);padding:32px;overflow:hidden}
+.logo-bar{display:flex;align-items:center;gap:14px;margin-bottom:24px;padding-bottom:16px;border-bottom:3px solid #4caf50}
+.logo-icon{width:52px;height:52px;background:linear-gradient(135deg,#2d7a3a,#66bb6a);border-radius:50%;display:flex;align-items:center;justify-content:center}
+.logo-icon svg{width:30px;height:30px;fill:#fff}
+.logo-text{font-size:32px;font-weight:900;color:#2d7a3a;letter-spacing:-1px}
+.logo-text span{color:#1a1a1a}
+.logo-sub{font-size:16px;font-weight:700;color:#555;letter-spacing:3px;margin-left:auto}
+.section{margin-bottom:24px;border:1px solid #e0e0e0;border-radius:10px;overflow:hidden}
+.section-header{display:flex;align-items:center;gap:10px;padding:12px 16px;background:linear-gradient(135deg,#e8f5e9,#c8e6c9);border-bottom:1px solid #c8e6c9}
+.section-header .ico{width:32px;height:32px;background:linear-gradient(135deg,#2d7a3a,#66bb6a);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.section-header .ico svg{width:18px;height:18px;fill:#fff}
+.section-header h2{font-size:15px;font-weight:800;color:#2d7a3a;letter-spacing:1px}
+.section-body{padding:16px}
+.row{display:flex;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+.field{display:flex;flex-direction:column;flex:1;min-width:140px}
+.field.w2{flex:2;min-width:260px}
+.field.w3{flex:3;min-width:360px}
+.field.w05{flex:.5;min-width:70px;max-width:100px}
+.field label{font-size:10px;font-weight:700;color:#555;letter-spacing:.5px;text-transform:uppercase;margin-bottom:3px}
+.field input,.field select{padding:8px 10px;border:1px solid #ccc;border-radius:6px;font-size:13px;background:#fafffe;transition:border .2s}
+.field input:focus,.field select:focus{outline:none;border-color:#4caf50;box-shadow:0 0 0 2px rgba(76,175,80,.15)}
+.field input[readonly]{background:#f0f0f0;color:#666}
+.radio-group{display:flex;gap:16px;align-items:center;padding:8px 0;flex-wrap:wrap}
+.radio-group label{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:500;cursor:pointer}
+.radio-group input[type=radio],.radio-group input[type=checkbox]{accent-color:#4caf50;width:16px;height:16px;cursor:pointer}
+.consent-block{background:#fafafa;border:1px solid #e0e0e0;border-radius:8px;padding:14px;margin-bottom:14px}
+.consent-block p{font-size:11px;color:#444;line-height:1.6;margin-bottom:10px}
+.consent-block .sig-row{display:flex;gap:12px;align-items:flex-end;margin-top:10px}
+.consent-block .sig-row .field{min-width:120px}
+.btn-bar{display:flex;gap:12px;justify-content:center;margin:24px 0;flex-wrap:wrap}
+.btn{padding:14px 32px;border:none;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;transition:transform .1s,box-shadow .2s}
+.btn:active{transform:scale(.97)}
+.btn-green{background:linear-gradient(135deg,#2d7a3a,#4caf50);color:#fff;box-shadow:0 4px 14px rgba(76,175,80,.3)}
+.btn-gray{background:#e0e0e0;color:#555}
+.footer-legal{font-size:8px;color:#aaa;text-align:center;margin-top:20px;padding-top:14px;border-top:1px solid #eee;line-height:1.8}
+.prefilled-badge{display:inline-block;background:#e8f5e9;color:#2d7a3a;font-size:9px;font-weight:700;padding:2px 8px;border-radius:4px;margin-left:8px;letter-spacing:.5px}
+@media(max-width:600px){.page{margin:8px;padding:16px;border-radius:8px}.row{flex-direction:column;gap:8px}.field.w05{max-width:none}.logo-text{font-size:24px}.logo-sub{font-size:12px;margin-left:0}}
+</style>
+</head>
+<body>
+
+<header class="no-print">
+  <h1>PROPOSTA DI FORNITURA DIGITALE</h1>
+  <p>Compila il contratto Energy.Lab — i dati dal comparatore sono pre-compilati</p>
+</header>
+
+<div class="page" id="contractPage">
+
+  <!-- LOGO BAR -->
+  <div class="logo-bar">
+    <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M13 3L4 14h7l-2 7 9-11h-7l2-7z"/></svg></div>
+    <div><div class="logo-text">energy.<span>lab</span></div></div>
+    <div class="logo-sub">PROPOSTA DI FORNITURA</div>
+  </div>
+
+  <!-- ============ SEZIONE 1: DATI DEL CLIENTE ============ -->
+  <div class="section">
+    <div class="section-header">
+      <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v3h20v-3c0-3.3-6.7-5-10-5z"/></svg></div>
+      <h2>DATI DEL CLIENTE</h2>
+    </div>
+    <div class="section-body">
+      <div class="row">
+        <div class="field w3">
+          <label>Tipologia cliente</label>
+          <div class="radio-group">
+            <label><input type="radio" name="tipologia" value="business" id="tip_bus"/> Business</label>
+            <label><input type="radio" name="tipologia" value="condomini" id="tip_con"/> Condomini</label>
+            <label><input type="radio" name="tipologia" value="domestico" id="tip_dom"/> Domestico</label>
+            <label><input type="radio" name="tipologia" value="pa" id="tip_pa"/> Amministrazione pubblica</label>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field w3"><label>Ragione Sociale / Cognome e Nome</label><input id="ragione_sociale"/></div>
+      </div>
+      <div class="row">
+        <div class="field w2"><label>P.IVA</label><input id="piva"/></div>
+        <div class="field w2"><label>Codice Fiscale</label><input id="cf"/></div>
+      </div>
+      <div class="row">
+        <div class="field w3"><label>Indirizzo (sede legale / residenza)</label><input id="indirizzo_sede"/></div>
+        <div class="field w05"><label>N°</label><input id="civico_sede"/></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>CAP</label><input id="cap_sede" maxlength="5"/></div>
+        <div class="field w2"><label>Comune</label><input id="comune_sede"/></div>
+        <div class="field"><label>Provincia</label><input id="prov_sede" maxlength="2"/></div>
+      </div>
+      <div class="row">
+        <div class="field w2"><label>Legale Rappresentante</label><input id="legale_rapp"/></div>
+        <div class="field w2"><label>Codice Fiscale Legale Rapp.</label><input id="cf_legale"/></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SEZIONE 2: CONTATTI E FATTURAZIONE ============ -->
+  <div class="section">
+    <div class="section-header">
+      <div class="ico"><svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg></div>
+      <h2>CONTATTI COMUNICAZIONI E SPEDIZIONI FATTURE</h2>
+    </div>
+    <div class="section-body">
+      <div class="row">
+        <div class="field w3"><label>Referente Contrattuale / Cognome e Nome</label><input id="referente"/></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Telefono</label><input id="telefono" type="tel"/></div>
+        <div class="field"><label>Cellulare</label><input id="cellulare" type="tel"/></div>
+        <div class="field"><label>E-mail</label><input id="email" type="email"/></div>
+      </div>
+      <div class="row">
+        <div class="field w3">
+          <label>Invio Fattura</label>
+          <div class="radio-group">
+            <label><input type="radio" name="invio_fattura" value="mail"/> Mail</label>
+            <label><input type="radio" name="invio_fattura" value="posta"/> Posta ordinaria</label>
+            <label><input type="radio" name="invio_fattura" value="entrambi"/> Mail e Posta ordinaria</label>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field w3"><label>Indirizzo (spedizione fatture)</label><input id="indirizzo_fatt"/></div>
+        <div class="field w05"><label>N°</label><input id="civico_fatt"/></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>CAP</label><input id="cap_fatt" maxlength="5"/></div>
+        <div class="field w2"><label>Comune</label><input id="comune_fatt"/></div>
+        <div class="field"><label>Provincia</label><input id="prov_fatt" maxlength="2"/></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Fatturazione elettronica — PEC</label><input id="pec" type="email"/></div>
+        <div class="field"><label>Codice Destinatario (SDI)</label><input id="sdi" maxlength="7"/></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SEZIONE 3: ENERGIA ELETTRICA ============ -->
+  <div class="section" id="sez_ee">
+    <div class="section-header">
+      <div class="ico"><svg viewBox="0 0 24 24"><path d="M13 3L4 14h7l-2 7 9-11h-7l2-7z"/></svg></div>
+      <h2>ENERGIA ELETTRICA (dati punti di fornitura)</h2>
+    </div>
+    <div class="section-body">
+      <div class="row">
+        <div class="field w2"><label>Codice listino/offerta <span class="prefilled-badge">PRE-COMPILATO</span></label><input id="ee_listino" readonly/></div>
+      </div>
+      <div class="row">
+        <div class="field w3"><label>Indirizzo di fornitura (se diverso da sede legale)</label><input id="ee_indirizzo"/></div>
+        <div class="field w05"><label>N°</label><input id="ee_civico"/></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>CAP</label><input id="ee_cap" maxlength="5"/></div>
+        <div class="field w2"><label>Comune</label><input id="ee_comune"/></div>
+        <div class="field"><label>Provincia</label><input id="ee_prov" maxlength="2"/></div>
+      </div>
+      <div class="row">
+        <div class="field w3"><label>POD <span class="prefilled-badge">PRE-COMPILATO</span></label><input id="ee_pod"/></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Potenza impegnata (kW) <span class="prefilled-badge">PRE-COMPILATO</span></label><input id="ee_pot_imp" type="number" step="0.1"/></div>
+        <div class="field"><label>Potenza disponibile (kW)</label><input id="ee_pot_disp" type="number" step="0.1"/></div>
+        <div class="field"><label>Tensione (V)</label><input id="ee_tensione"/></div>
+        <div class="field"><label>Consumo anno (kWh) <span class="prefilled-badge">PRE-COMPILATO</span></label><input id="ee_consumo" type="number"/></div>
+      </div>
+      <div class="row">
+        <div class="field w3">
+          <label>Destinazione d'uso</label>
+          <div class="radio-group">
+            <label><input type="radio" name="ee_dest" value="dom_res"/> Domestico residente</label>
+            <label><input type="radio" name="ee_dest" value="dom_nres"/> Domestico non residente</label>
+            <label><input type="radio" name="ee_dest" value="illum"/> Illuminazione pubblica</label>
+            <label><input type="radio" name="ee_dest" value="altri"/> Altri usi</label>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field w2"><label>Attuale fornitore <span class="prefilled-badge">PRE-COMPILATO</span></label><input id="ee_fornitore"/></div>
+        <div class="field"><label>Data inizio fornitura</label><input id="ee_data_inizio" type="date"/></div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>Allegato Multisito</label>
+          <div class="radio-group">
+            <label><input type="radio" name="ee_multisito" value="si"/> Si</label>
+            <label><input type="radio" name="ee_multisito" value="no" checked/> No</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SEZIONE 4: GAS NATURALE ============ -->
+  <div class="section" id="sez_gas">
+    <div class="section-header">
+      <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 2C8 6 4 10.5 4 14.5 4 18.6 7.6 22 12 22s8-3.4 8-7.5C20 10.5 16 6 12 2zm0 18c-3.3 0-6-2.6-6-5.5 0-2.6 2.5-5.8 6-9.5 3.5 3.7 6 6.9 6 9.5 0 2.9-2.7 5.5-6 5.5z"/></svg></div>
+      <h2>GAS NATURALE (dati punti di fornitura)</h2>
+    </div>
+    <div class="section-body">
+      <div class="row">
+        <div class="field w2"><label>Codice listino/offerta <span class="prefilled-badge">PRE-COMPILATO</span></label><input id="gas_listino" readonly/></div>
+      </div>
+      <div class="row">
+        <div class="field w3"><label>Indirizzo di fornitura (se diverso da sede legale)</label><input id="gas_indirizzo"/></div>
+        <div class="field w05"><label>N°</label><input id="gas_civico"/></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>CAP</label><input id="gas_cap" maxlength="5"/></div>
+        <div class="field w2"><label>Comune</label><input id="gas_comune"/></div>
+        <div class="field"><label>Provincia</label><input id="gas_prov" maxlength="2"/></div>
+      </div>
+      <div class="row">
+        <div class="field w2"><label>PDR <span class="prefilled-badge">PRE-COMPILATO</span></label><input id="gas_pdr"/></div>
+        <div class="field"><label>Remi</label><input id="gas_remi"/></div>
+      </div>
+      <div class="row">
+        <div class="field w2"><label>Distributore</label><input id="gas_distributore"/></div>
+        <div class="field"><label>Matricola</label><input id="gas_matricola"/></div>
+        <div class="field"><label>Consumo anno (Smc) <span class="prefilled-badge">PRE-COMPILATO</span></label><input id="gas_consumo" type="number"/></div>
+      </div>
+      <div class="row">
+        <div class="field w3">
+          <label>Tipologia d'uso</label>
+          <div class="radio-group">
+            <label><input type="radio" name="gas_tipologia" value="dom_res"/> Domestico residente</label>
+            <label><input type="radio" name="gas_tipologia" value="dom_nres"/> Domestico non residente</label>
+            <label><input type="radio" name="gas_tipologia" value="industria"/> Industria</label>
+            <label><input type="radio" name="gas_tipologia" value="commercio"/> Commercio e Servizi</label>
+            <label><input type="radio" name="gas_tipologia" value="cond_dom"/> Condominio con uso domestico</label>
+            <label><input type="radio" name="gas_tipologia" value="serv_pub"/> Attivit&agrave; di servizio pubblico</label>
+            <label><input type="radio" name="gas_tipologia" value="autotraz"/> Autotrazione</label>
+            <label><input type="radio" name="gas_tipologia" value="gen_elett"/> Generazione Elettrica</label>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field w3">
+          <label>Destinazione d'uso</label>
+          <div class="radio-group">
+            <label><input type="radio" name="gas_dest" value="c1"/> C1 Riscaldamento</label>
+            <label><input type="radio" name="gas_dest" value="c2"/> C2 Uso cottura/acqua calda</label>
+            <label><input type="radio" name="gas_dest" value="c3"/> C3 Risc.+cottura/acqua calda</label>
+            <label><input type="radio" name="gas_dest" value="c4"/> C4 Uso condizionamento</label>
+            <label><input type="radio" name="gas_dest" value="c5"/> C5 Condiz.+Riscaldamento</label>
+            <label><input type="radio" name="gas_dest" value="t1"/> T1 Uso tecnologico</label>
+            <label><input type="radio" name="gas_dest" value="t2"/> T2 Uso tecnol.+Riscaldamento</label>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field w3">
+          <label>Classe di prelievo</label>
+          <div class="radio-group">
+            <label><input type="radio" name="gas_classe" value="7gg"/> 7 giorni</label>
+            <label><input type="radio" name="gas_classe" value="6gg"/> 6 giorni (escl. domeniche e festivit&agrave;)</label>
+            <label><input type="radio" name="gas_classe" value="5gg"/> 5 giorni (escl. sabati, domeniche e festivit&agrave;)</label>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>Allegato Multisito</label>
+          <div class="radio-group">
+            <label><input type="radio" name="gas_multisito" value="si"/> Si</label>
+            <label><input type="radio" name="gas_multisito" value="no" checked/> No</label>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field w2"><label>Attuale fornitore <span class="prefilled-badge">PRE-COMPILATO</span></label><input id="gas_fornitore"/></div>
+        <div class="field"><label>Data inizio fornitura</label><input id="gas_data_inizio" type="date"/></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SEZIONE 5: MANDATO SEPA ============ -->
+  <div class="section">
+    <div class="section-header">
+      <div class="ico"><svg viewBox="0 0 24 24"><path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V5c0-1.1.9-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.8 0-1.5-.7-1.5-1.5s.7-1.5 1.5-1.5 1.5.7 1.5 1.5-.7 1.5-1.5 1.5z"/></svg></div>
+      <h2>MANDATO SEPA DIRECT DEBIT</h2>
+    </div>
+    <div class="section-body">
+      <p style="font-size:10px;color:#666;margin-bottom:14px;line-height:1.6">Il sottoscritto autorizza Energy.Lab srl a disporre sul conto corrente sottoindicato addebiti ricorrenti, secondo le disposizioni impartite da Energy.Lab srl stessa, per il contratto indicato. Il sottoscritto ha la facolt&agrave; di richiedere all'Istituto di Credito il rimborso di quanto addebitato.</p>
+      <div class="row">
+        <div class="field w3"><label>Intestazione SDD (Sepa Direct Debit)</label><input id="sepa_intestazione"/></div>
+      </div>
+      <div class="row">
+        <div class="field w3"><label>Indirizzo</label><input id="sepa_indirizzo"/></div>
+        <div class="field w05"><label>N°</label><input id="sepa_civico"/></div>
+      </div>
+      <div class="row">
+        <div class="field w2"><label>Citt&agrave;</label><input id="sepa_citta"/></div>
+        <div class="field"><label>Prov.</label><input id="sepa_prov" maxlength="2"/></div>
+        <div class="field"><label>CAP</label><input id="sepa_cap" maxlength="5"/></div>
+      </div>
+      <div class="row">
+        <div class="field w3"><label>IBAN</label><input id="sepa_iban" maxlength="27" placeholder="IT00 X000 0000 0000 0000 0000 000" style="font-family:monospace;letter-spacing:1px"/></div>
+      </div>
+      <div class="row">
+        <div class="field w2"><label>BIC (solo se IBAN non inizia con IT)</label><input id="sepa_bic"/></div>
+      </div>
+      <div class="row">
+        <div class="field w2"><label>Sottoscrittore: Cognome e Nome</label><input id="sepa_sottoscrittore"/></div>
+        <div class="field"><label>Cod. Fisc.</label><input id="sepa_cf"/></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Luogo</label><input id="sepa_luogo"/></div>
+        <div class="field"><label>Data</label><input id="sepa_data" type="date"/></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SEZIONE 6: FIRME E CONSENSI ============ -->
+  <div class="section">
+    <div class="section-header">
+      <div class="ico"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></div>
+      <h2>DICHIARAZIONI E FIRME</h2>
+    </div>
+    <div class="section-body">
+
+      <!-- Consenso Privacy GDPR -->
+      <div class="consent-block">
+        <p><strong>Informativa Privacy (GDPR):</strong> Il sottoscritto, espressamente e liberamente, afferma di aver preso visione dell'informativa di cui all'art. 13 e 14 del GDPR (Regolamento UE) 2016/679 allegata alla presente "Proposta di fornitura" e D.Lgs. 101/2018 e s.m.i.</p>
+        <div class="sig-row">
+          <div class="field"><label>Luogo</label><input id="firma1_luogo"/></div>
+          <div class="field"><label>Data</label><input id="firma1_data" type="date"/></div>
+          <div class="field w2"><label>Firma del cliente o rappresentante legale</label><input id="firma1" placeholder="Firma"/></div>
+        </div>
+      </div>
+
+      <!-- Accettazione CGF -->
+      <div class="consent-block">
+        <p><strong>Condizioni Generali di Fornitura:</strong> Il Cliente dichiara di aver ricevuto, letto ed approvato i seguenti allegati: Condizioni Generali di Fornitura - Mercato Libero (CGF), Condizioni tecnico-economiche, Scheda sintetica, Informativa sui livelli di qualit&agrave; commerciali.</p>
+        <div class="sig-row">
+          <div class="field"><label>Luogo</label><input id="firma2_luogo"/></div>
+          <div class="field"><label>Data</label><input id="firma2_data" type="date"/></div>
+          <div class="field w2"><label>Firma</label><input id="firma2" placeholder="Firma"/></div>
+        </div>
+      </div>
+
+      <!-- Approvazione specifica clausole -->
+      <div class="consent-block">
+        <p><strong>Approvazione specifica clausole CGF:</strong> Ai sensi degli artt. 1341 e 1342 del Codice Civile, il Cliente dichiara di aver ricevuto, letto ed approvato specificamente le condizioni e le clausole contenute nelle CGF: art. 1 (Premessa), art. 2 (Conclusione del contratto), art. 3 (Aspetti della somministrazione), art. 4 (Contratti di trasporto, distribuzione e dispacciamento), art. 5 (Mandato alla connessione), art. 6 (Durata, recesso e diritto di ripensamento), art. 7 (Condizioni economiche), art. 8 (Variazioni unilaterali), art. 9 (Rilevazione dei consumi), art. 10 (Pagamenti e rateizzazioni), art. 11 (Deposito cauzionale), art. 12 (Sospensione), art. 13 (Richieste scritte e reclami), art. 14 (Procedure extragiudiziali), art. 15 (Risoluzione di diritto), art. 16 (Divieto di cessione), art. 17 (Registrazione), art. 18 (Controversie e foro competente).</p>
+        <div class="sig-row">
+          <div class="field"><label>Luogo</label><input id="firma3_luogo"/></div>
+          <div class="field"><label>Data</label><input id="firma3_data" type="date"/></div>
+          <div class="field w2"><label>Firma</label><input id="firma3" placeholder="Firma"/></div>
+        </div>
+      </div>
+
+      <!-- Diritto di recesso (consumatori) -->
+      <div class="consent-block">
+        <p><strong>Diritto di recesso (art. 6 CGF):</strong> Con la sottoscrizione del presente modulo il Cliente (domestico o comunque sottoposto alla disciplina del Codice del Consumo) dichiara di essere a conoscenza di quanto previsto dall'art. 6 delle CGF.</p>
+        <div class="sig-row">
+          <div class="field"><label>Luogo</label><input id="firma4_luogo"/></div>
+          <div class="field"><label>Data</label><input id="firma4_data" type="date"/></div>
+          <div class="field w2"><label>Firma</label><input id="firma4" placeholder="Firma"/></div>
+        </div>
+      </div>
+
+      <!-- Mandato recesso precedente fornitore -->
+      <div class="consent-block">
+        <p><strong>Mandato recesso precedente fornitore:</strong> Il Cliente dichiara di dare specifico mandato con rappresentanza ad Energy.Lab srl affinch&eacute; proceda alla formalizzazione del recesso contrattuale nei confronti del precedente fornitore circa la fornitura di energia elettrica e/o gas naturale. Il recesso avr&agrave; effetto a partire dalla prima data utile in base ai tempi previsti dalla normativa dell'ARERA. Il Cliente si assume la responsabilit&agrave; dell'esattezza e della veridicit&agrave; dei dati riportati nel presente modulo.</p>
+        <div class="sig-row">
+          <div class="field"><label>Luogo</label><input id="firma5_luogo"/></div>
+          <div class="field"><label>Data</label><input id="firma5_data" type="date"/></div>
+          <div class="field w2"><label>Firma</label><input id="firma5" placeholder="Firma"/></div>
+        </div>
+      </div>
+
+      <!-- Dati catastali -->
+      <div class="consent-block">
+        <p><strong>Dati catastali:</strong> Il Cliente con la sottoscrizione del presente modulo dichiara inoltre di avere ricevuto il modello per la compilazione dei dati catastali (Legge 311/2004).</p>
+        <div class="sig-row">
+          <div class="field"><label>Luogo</label><input id="firma6_luogo"/></div>
+          <div class="field"><label>Data</label><input id="firma6_data" type="date"/></div>
+          <div class="field w2"><label>Firma</label><input id="firma6" placeholder="Firma"/></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FIRMA FINALE -->
+  <div class="section">
+    <div class="section-header">
+      <div class="ico"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg></div>
+      <h2>FIRMA FINALE</h2>
+    </div>
+    <div class="section-body">
+      <div class="row">
+        <div class="field"><label>Luogo</label><input id="firma_finale_luogo"/></div>
+        <div class="field"><label>Data</label><input id="firma_finale_data" type="date"/></div>
+        <div class="field w2"><label>Firma del cliente o del rappresentante legale o delegato</label><input id="firma_finale" placeholder="Firma" style="border-bottom:2px solid #2d7a3a!important"/></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BUTTONS -->
+  <div class="btn-bar no-print">
+    <button class="btn btn-green" onclick="window.print()">🖨️ STAMPA / SALVA PDF</button>
+    <button class="btn btn-gray" onclick="window.close()">← TORNA AL COMPARATORE</button>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer-legal">
+    ENERGY.LAB SRL - P.IVA: 13671680968 — Sede legale: Via A. Volta 91 20872 Cornate d'Adda (MB)<br/>
+    Sede operativa: Via E. Mattei 12 20885 Ronco Briantino (MB) — Mail: info@energylabitalia.it - Tel: 039 5787181<br/>
+    Pec: energy.labsrl@pec.it - www.energylabitalia.it
+  </div>
+
+</div>
+
+<script>
+// Pre-fill from URL parameters (passed by the comparator)
+(function(){
+  const p = new URLSearchParams(window.location.search);
+
+  // Helper to set value
+  function setVal(id, val){ if(val){ var el=document.getElementById(id); if(el) el.value=val; } }
+  function setRadio(name, val){ if(val){ var els=document.querySelectorAll('input[name="'+name+'"]'); els.forEach(function(el){ if(el.value===val) el.checked=true; }); } }
+
+  // Client data
+  var cliente = p.get('cliente') || '';
+  var tipo = p.get('tipo') || '';     // luce or gas
+  var seg = p.get('seg') || '';       // business or domestico
+  var forn = p.get('forn') || '';
+  var consumo = p.get('consumo') || '';
+  var pod_pdr = p.get('pod_pdr') || '';
+  var potenza = p.get('potenza') || '';
+  var listino = p.get('listino') || '';
+  var mese = p.get('mese') || '';
+
+  // Ragione sociale
+  setVal('ragione_sociale', cliente);
+  setVal('referente', cliente);
+
+  // Tipologia cliente
+  if(seg === 'business') setRadio('tipologia', 'business');
+  else if(seg === 'domestico') setRadio('tipologia', 'domestico');
+
+  // Highlight the relevant supply section, dim the other
+  if(tipo === 'luce'){
+    setVal('ee_listino', listino);
+    setVal('ee_pod', pod_pdr);
+    setVal('ee_pot_imp', potenza);
+    setVal('ee_consumo', consumo ? String(Math.round(parseFloat(consumo)*12)) : '');
+    setVal('ee_fornitore', forn);
+    // Set destination based on segment
+    if(seg === 'domestico') setRadio('ee_dest', 'dom_res');
+    else setRadio('ee_dest', 'altri');
+    // Dim gas section
+    document.getElementById('sez_gas').style.opacity = '0.4';
+  } else if(tipo === 'gas'){
+    setVal('gas_listino', listino);
+    setVal('gas_pdr', pod_pdr);
+    setVal('gas_consumo', consumo ? String(Math.round(parseFloat(consumo)*12)) : '');
+    setVal('gas_fornitore', forn);
+    // Set tipologia based on segment
+    if(seg === 'domestico') setRadio('gas_tipologia', 'dom_res');
+    else setRadio('gas_tipologia', 'commercio');
+    // Dim EE section
+    document.getElementById('sez_ee').style.opacity = '0.4';
+  }
+
+  // Auto-fill today's date in all date fields
+  var today = new Date().toISOString().split('T')[0];
+  setVal('sepa_data', today);
+  setVal('firma1_data', today);
+  setVal('firma2_data', today);
+  setVal('firma3_data', today);
+  setVal('firma4_data', today);
+  setVal('firma5_data', today);
+  setVal('firma6_data', today);
+  setVal('firma_finale_data', today);
+
+})();
+</script>
+
+</body>
+</html>
