@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="theme-color" content="#059669"/>
+<link rel="manifest" href="/manifest.json"/>
+<link rel="apple-touch-icon" href="/icon-192.png"/>
+<title>POWER-IT Energy Comparator</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:#f8fafc;color:#1e293b;min-height:100vh;-webkit-text-size-adjust:100%}
+input,select,button{font-family:inherit}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useRef,useMemo,useCallback}=React;
+
+/* ========== DATA ========== */
+const MKT={
+"2025-01":{pun:.14616,psv:.528,disp:.00817,cm:.01168},
+"2025-02":{pun:.15217,psv:.561,disp:.00817,cm:.01030},
+"2025-03":{pun:.12273,psv:.450,disp:.00817,cm:.00400},
+"2025-04":{pun:.10199,psv:.398,disp:.00813,cm:.00365},
+"2025-05":{pun:.09561,psv:.398,disp:.00813,cm:.00400},
+"2025-06":{pun:.11580,psv:.410,disp:.00813,cm:.00759},
+"2025-07":{pun:.11700,psv:.388,disp:.00891,cm:.02166},
+"2025-08":{pun:.11154,psv:.377,disp:.00891,cm:.00626},
+"2025-09":{pun:.11177,psv:.369,disp:.00891,cm:.00363},
+"2025-10":{pun:.11522,psv:.350,disp:.00891,cm:.00428},
+"2025-11":{pun:.12148,psv:.349105,disp:.00891,cm:.00428},
+"2025-12":{pun:.11820,psv:.328248,disp:.00891,cm:.00819},
+"2026-01":{pun:.13699,psv:.404227,disp:.00969,cm:.01235},
+"2026-02":{pun:.11580,psv:.377230,disp:.00969,cm:.01058},
+};
+const PCS=.01,PERD=.10,IVA_R=.22;
+const ALL={
+  business_ee:[{cte:"EB203",qfix:20,spread:.011,gettone:60,provv:.00125,tag:"Spread basso, gettone max"},{cte:"EB201",qfix:20,spread:.025,gettone:60,provv:.005,tag:"Spread alto, provv max"},{cte:"EB151",qfix:15,spread:.016,gettone:45,provv:.003,tag:"Equilibrato"},{cte:"EB150",qfix:15,spread:.020,gettone:45,provv:.004,tag:"Standard"},{cte:"EB120",qfix:12,spread:.016,gettone:30,provv:.003,tag:"Medio"},{cte:"EB101",qfix:10,spread:.016,gettone:20,provv:.003,tag:"Economico"},{cte:"EB100",qfix:10,spread:.011,gettone:20,provv:.00125,tag:"Minimo costo"}],
+  domestico_ee:[{cte:"ED150",qfix:15,spread:.025,gettone:45,provv:0,tag:"Premium"},{cte:"ED151",qfix:15,spread:.011,gettone:37.5,provv:0,tag:"Spread basso"},{cte:"ED120",qfix:12,spread:.020,gettone:30,provv:0,tag:"Standard"},{cte:"ED100",qfix:10,spread:.016,gettone:20,provv:0,tag:"Economico"},{cte:"ED80",qfix:8,spread:.011,gettone:10,provv:0,tag:"Minimo"}],
+  business_gas:[{cte:"GB18",qfix:15,spread:.18,gettone:45,provv:.03,tag:"Gettone+provv max"},{cte:"GB15",qfix:10,spread:.15,gettone:20,provv:.0225,tag:"Standard"},{cte:"GB12",qfix:8,spread:.12,gettone:10,provv:.015,tag:"Economico"}],
+  domestico_gas:[{cte:"GD18",qfix:15,spread:.18,gettone:45,provv:0,tag:"Gettone max"},{cte:"GD15",qfix:10,spread:.15,gettone:30,provv:0,tag:"Standard"},{cte:"GD12",qfix:8,spread:.12,gettone:20,provv:0,tag:"Economico"}],
+};
+
+/* ========== CALC ========== */
+function calc(o,tipo,consumo,mese,spR,acc,alt,totA){
+  const m=MKT[mese]||{pun:.111,psv:.37,disp:.00891,cm:.00428};
+  if(tipo==="luce"){const p=m.pun,cP=consumo*(1+PERD),pr=p+m.disp+m.cm+o.spread,spC=cP*pr,imp=spC+o.qfix+spR+acc+alt,iv=(spC+o.qfix+spR+alt)*IVA_R;return{...o,pun:p,disp:m.disp,cm:m.cm,spC,tot:imp+iv,risp:totA-(imp+iv),iv,cP,pKwh:pr*(1+PERD)};}
+  else{const p=m.psv,pr=p+o.spread+PCS,spC=consumo*pr,imp=spC+o.qfix+spR+acc+alt,iv=(spC+o.qfix+spR+alt)*IVA_R;return{...o,psv:p,spC,tot:imp+iv,risp:totA-(imp+iv),iv,cP:consumo,pKwh:pr};}
+}
+const fm=n=>(n??0).toLocaleString("it-IT",{minimumFractionDigits:2,maximumFractionDigits:2})+" €";
+const f4=n=>(n??0).toLocaleString("it-IT",{minimumFractionDigits:4,maximumFractionDigits:6});
+const fP=n=>(n??0).toLocaleString("it-IT",{minimumFractionDigits:1,maximumFractionDigits:1})+"%";
+
+/* ========== OCR PROMPT ========== */
+const OCR_PROMPT=`Analizza questa bolletta energetica italiana (potrebbe essere composta da più pagine/foto). Restituisci SOLO JSON valido:
+{"cliente":"","fornitoreAttuale":"","tipo":"luce|gas","segmento":"business|domestico","consumo":0,"spesaVenditaConsumi":0,"quotaFissaVendita":0,"speseRete":0,"accise":0,"iva":0,"altrePartite":0,"totaleBolletta":0,"mese":"YYYY-MM","potenza":"","prezzoUnitario":0,"pod_pdr":"","annotazioni":[]}
+Regole: spesaVenditaConsumi=SOLO vendita consumi. quotaFissaVendita=SOLO fissa vendita. speseRete=trasporto+distribuzione+oneri. accise=imposte no IVA. "Altri usi"=business.
+ANNOTAZIONI: inserisci nell'array OGNI voce anomala: canone RAI, penali, bonus, sconti, rateizzazioni, depositi cauzionali, voci una tantum. Formato: ["1. Canone RAI €18 - non conteggiato","2. ..."].
+SOLO JSON, niente markdown.`;
+
+/* ========== DOC GENERATORS ========== */
+function genDoc(sel,f,totAtt,consumo){
+  const isL=f.tipo==="luce",u=isL?"kWh":"Smc";
+  const mn={"01":"Gennaio","02":"Febbraio","03":"Marzo","04":"Aprile","05":"Maggio","06":"Giugno","07":"Luglio","08":"Agosto","09":"Settembre","10":"Ottobre","11":"Novembre","12":"Dicembre"};
+  const[a,m]=f.mese.split("-");const meseN=`${mn[m]||m} ${a}`;
+  const rP=sel.risp>0?(sel.risp/totAtt*100).toFixed(1):"0";
+  return`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Offerta_${f.mese.replace("-","")}_${sel.cte}_${(f.cliente||"").replace(/[^a-zA-Z0-9]/g,"_").substring(0,20)}</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;color:#1a1a1a;background:#fff;font-size:11px;padding:28px 32px}@page{size:A4;margin:14mm 18mm}.hdr{display:flex;justify-content:space-between;margin-bottom:20px;padding-bottom:14px;border-bottom:3px solid #059669}.logo{font-size:24px;font-weight:900;color:#059669}.logo span{color:#222}.cb{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px 14px;margin-bottom:14px}.cn{font-size:15px;font-weight:800}.cd{font-size:10px;color:#555;margin-top:4px}.st{font-size:10px;font-weight:800;color:#059669;letter-spacing:2px;text-transform:uppercase;margin:16px 0 8px;padding-bottom:4px;border-bottom:1px solid #ddd}.cg{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}.cc{border-radius:8px;padding:12px;border:1px solid #ddd}.cl{font-size:9px;font-weight:700;letter-spacing:1px;margin-bottom:8px;text-transform:uppercase}.cl.r{color:#dc2626}.cl.g{color:#059669}.cr{display:flex;justify-content:space-between;font-size:10px;padding:3px 0;border-bottom:1px solid #f0f0f0}.ct{font-size:18px;font-weight:900;margin-top:10px;text-align:right}.ct.r{color:#dc2626}.ct.g{color:#059669}.sb{background:${sel.risp>0?"#059669":"#d97706"};border-radius:10px;padding:20px;text-align:center;color:#fff;margin-bottom:14px}.sa{font-size:30px;font-weight:900}.sp{font-size:13px;margin-top:3px}table.it{width:100%;border-collapse:collapse;margin-bottom:14px;font-size:10px}table.it th{background:#f8f8f8;padding:5px 8px;text-align:left;font-weight:700;border:1px solid #ddd}table.it td{padding:5px 8px;border:1px solid #ddd}.ft{margin-top:20px;font-size:7px;color:#bbb;text-align:center}</style></head><body>
+<div class="hdr"><div><div class="logo"><span>energy.</span>lab</div><div style="font-size:8px;color:#999;margin-top:3px;letter-spacing:2px">ANALISI COMPARATIVA POWER-IT</div></div><div style="text-align:right;font-size:10px;color:#666">Offerta ${isL?"Luce":"Gas"}<br/><b>Listino ${sel.cte}</b><br/>${meseN}</div></div>
+<div class="cb"><div class="cn">${f.cliente||"Cliente"}</div><div class="cd">Fornitore attuale: <b>${f.forn}</b> | ${isL?"Energia Elettrica":"Gas Naturale"} — ${f.seg} | Consumo: <b>${consumo.toLocaleString("it-IT")} ${u}</b></div></div>
+<div class="st">Comparazione — ${meseN}</div>
+<div class="cg"><div class="cc"><div class="cl r">Attuale — ${f.forn}</div><div class="cr"><span>Vendita consumi</span><b>${fm(parseFloat(f.spVC)||0)}</b></div><div class="cr"><span>Quota fissa</span><b>${fm(parseFloat(f.qfV)||0)}</b></div><div class="cr"><span>Rete+oneri</span><b>${fm(parseFloat(f.spR)||0)}</b></div><div class="cr"><span>Accise</span><b>${fm(parseFloat(f.acc)||0)}</b></div><div class="ct r">${fm(totAtt)}</div></div>
+<div class="cc"><div class="cl g">Energy.Lab — ${sel.cte}</div><div class="cr"><span>Vendita consumi</span><b>${fm(sel.spC)}</b></div><div class="cr"><span>Quota fissa</span><b>${fm(sel.qfix)}</b></div><div class="cr"><span>Rete+oneri</span><b>${fm(parseFloat(f.spR)||0)}</b></div><div class="cr"><span>Accise</span><b>${fm(parseFloat(f.acc)||0)}</b></div><div class="ct g">${fm(sel.tot)}</div></div></div>
+<div class="sb"><div class="sa">${fm(Math.abs(sel.risp))}</div><div class="sp">${sel.risp>0?`Risparmi il ${rP}% passando a Energy.Lab`:"Nessun risparmio"}</div></div>
+<div class="st">Dettagli offerta</div>
+<table class="it"><tr><th>Voce</th><th>Dettaglio</th></tr><tr><td>Listino</td><td><b>${sel.cte}</b></td></tr><tr><td>Prezzo</td><td><b>${f4(sel.pKwh)} €/${u}</b></td></tr><tr><td>Q.fissa</td><td>${fm(sel.qfix)}/mese</td></tr><tr><td>Durata</td><td>Tempo indeterminato</td></tr><tr><td>Recesso</td><td>Nessun onere</td></tr></table>
+${sel.risp>0?`<table class="it"><tr><th>Proiezione</th><th>Importo</th></tr><tr><td>Risparmio mensile</td><td><b style="color:#059669">${fm(sel.risp)}</b></td></tr><tr><td>Risparmio annuale</td><td><b style="color:#059669;font-size:14px">${fm(sel.risp*12)}</b></td></tr></table>`:""}
+<div style="font-size:8px;color:#999;line-height:1.6">Documento indicativo. Prezzi basati su ${isL?"PUN":"PSV"} di ${meseN}, variabili mensilmente.</div>
+<div class="ft">Energy.Lab S.r.l. — P.IVA 13671680968 — Via A. Volta 91, Cornate d'Adda (MB)<br/>Generato il ${new Date().toLocaleDateString("it-IT")} — Analisi POWER-IT</div></body></html>`;
+}
+
+/* ========== MAIN APP ========== */
+function App(){
+  const[step,setStep]=useState("upload");
+  const[loading,setLoading]=useState(false);
+  const[loadMsg,setLoadMsg]=useState("");
+  const[error,setError]=useState("");
+  const[extracted,setExtracted]=useState(null);
+  const[photos,setPhotos]=useState([]); // multi-page photos [{data,type,thumb}]
+  const[selCte,setSelCte]=useState(null);
+  const[docReady,setDocReady]=useState(false);
+  const[pwPct,setPwPct]=useState(40);
+  const[agPct,setAgPct]=useState(60);
+  const[saPct,setSaPct]=useState(0);
+  const[annotations,setAnnotations]=useState([]);
+  const fileRef=useRef(null);
+  const camRef=useRef(null);
+
+  const[f,setF]=useState({cliente:"",tipo:"luce",seg:"business",forn:"",consumo:"",spVC:"",qfV:"",spR:"",acc:"",iva:"",alt:"0",tot:"",mese:"2026-01",pot:""});
+  const u=(k,v)=>setF(x=>({...x,[k]:v}));
+
+  /* Convert file to base64 */
+  const fileToB64=file=>new Promise((res,rej)=>{
+    const buf=file.arrayBuffer();
+    buf.then(ab=>{
+      const bytes=new Uint8Array(ab);let bin="";
+      for(let i=0;i<bytes.length;i+=8192)for(let j=i;j<Math.min(i+8192,bytes.length);j++)bin+=String.fromCharCode(bytes[j]);
+      res({data:btoa(bin),type:file.type||"image/jpeg"});
+    }).catch(rej);
+  });
+
+  /* Create thumbnail */
+  const makeThumb=(file)=>new Promise(res=>{
+    if(file.type==="application/pdf"){res("PDF");return;}
+    const r=new FileReader();
+    r.onload=()=>res(r.result);
+    r.readAsDataURL(file);
+  });
+
+  /* Add photo/file to the stack */
+  const addPhoto=async(file)=>{
+    const b64=await fileToB64(file);
+    const thumb=await makeThumb(file);
+    setPhotos(prev=>[...prev,{...b64,thumb,name:file.name}]);
+  };
+
+  /* Remove photo */
+  const removePhoto=(idx)=>setPhotos(prev=>prev.filter((_,i)=>i!==idx));
+
+  /* Process all photos through OCR */
+  const processPhotos=async()=>{
+    if(photos.length===0)return;
+    setLoading(true);setError("");
+    const ms=["Lettura bolletta...","Analisi AI in corso...","Estrazione dati...","Calcolo tariffe..."];
+    let mi=0;setLoadMsg(ms[0]);const iv=setInterval(()=>{mi=(mi+1)%ms.length;setLoadMsg(ms[mi]);},2000);
+    try{
+      const images=photos.map(p=>({data:p.data,type:p.type}));
+      const payload=JSON.stringify({images,prompt:OCR_PROMPT});
+      console.log("OCR payload size:",((payload.length)/1024/1024).toFixed(2),"MB, images:",images.length);
+      const res=await fetch("/api/ocr",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:payload
+      });
+      if(!res.ok){
+        const errText=await res.text();
+        throw new Error("HTTP "+res.status+": "+errText);
+      }
+      const d=await res.json();
+      if(d.error)throw new Error(d.error);
+      clearInterval(iv);
+      const txt=d.content?.map(c=>c.text||"").join("")||"";
+      const p=JSON.parse(txt.replace(/```json\s*/g,"").replace(/```\s*/g,"").trim());
+      setExtracted(p);
+      setAnnotations(Array.isArray(p.annotazioni)?p.annotazioni:[]);
+      setF({cliente:p.cliente||"",tipo:p.tipo||"luce",seg:p.segmento||"business",forn:p.fornitoreAttuale||"",consumo:String(p.consumo||""),spVC:String(p.spesaVenditaConsumi||""),qfV:String(p.quotaFissaVendita||""),spR:String(p.speseRete||""),acc:String(p.accise||""),iva:String(p.iva||""),alt:String(p.altrePartite||"0"),tot:String(p.totaleBolletta||""),mese:p.mese||"2026-01",pot:String(p.potenza||"")});
+      setStep("review");
+    }catch(e){clearInterval(iv);setError(e.message);}
+    setLoading(false);
+  };
+
+  /* Handle file upload */
+  const handleFile=async(e)=>{
+    const files=e.target.files;
+    for(let i=0;i<files.length;i++)await addPhoto(files[i]);
+  };
+
+  const goSel=()=>{setSelCte(null);setDocReady(false);setStep("select");};
+  const reset=()=>{setStep("upload");setExtracted(null);setError("");setSelCte(null);setDocReady(false);setAnnotations([]);setPhotos([]);};
+
+  const handlePw=v=>{const pw=Math.min(100,Math.max(0,parseInt(v)||0));setPwPct(pw);setAgPct(100-pw);setSaPct(0);};
+  const handleAg=v=>{const ag=Math.min(100-pwPct,Math.max(0,parseInt(v)||0));setAgPct(ag);setSaPct(100-pwPct-ag);};
+
+  const totAtt=parseFloat(f.tot)||((parseFloat(f.spVC)||0)+(parseFloat(f.qfV)||0)+(parseFloat(f.spR)||0)+(parseFloat(f.acc)||0)+(parseFloat(f.alt)||0)+(parseFloat(f.iva)||0));
+  const consumo=parseFloat(f.consumo)||0;
+  const key=`${f.seg}_${f.tipo==="luce"?"ee":"gas"}`;
+  const listini=ALL[key]||[];
+  const ac=useMemo(()=>listini.map(o=>calc(o,f.tipo,consumo,f.mese,parseFloat(f.spR)||0,parseFloat(f.acc)||0,parseFloat(f.alt)||0,totAtt)).sort((a,b)=>a.tot-b.tot),[f,consumo,totAtt]);
+
+  /* Download helpers */
+  const openPrint=(html)=>{
+    const w=window.open("","_blank");
+    if(w){w.document.write(html);w.document.close();}
+  };
+
+  const downloadDoc=useCallback(()=>{
+    const s=ac.find(c=>c.cte===selCte);if(!s)return;
+    const html=genDoc(s,f,totAtt,consumo);
+    openPrint(html+"<script>setTimeout(function(){window.print()},600)<\/script>");
+    setDocReady(true);
+  },[selCte,ac,f,totAtt,consumo]);
+
+  /* ========== STYLES ========== */
+  const bg={padding:16,minHeight:"100vh",background:"#f8fafc"};
+  const cd={background:"#fff",borderRadius:12,border:"1px solid #d1d5db",boxShadow:"0 2px 6px rgba(0,0,0,0.06)"};
+  const inp={width:"100%",padding:"10px",background:"#f8fafc",border:"1px solid #94a3b8",borderRadius:7,color:"#1e293b",fontSize:14,outline:"none",boxSizing:"border-box"};
+  const lb={display:"block",fontSize:9,fontWeight:700,letterSpacing:1.5,color:"#475569",marginBottom:3,textTransform:"uppercase"};
+  const bt={padding:"8px 16px",background:"#fff",border:"1px solid #d1d5db",borderRadius:8,color:"#475569",fontSize:12,cursor:"pointer"};
+  const nf="system-ui,sans-serif";
+
+  /* ========== UPLOAD STEP ========== */
+  if(step==="upload")return(
+    <div style={bg}><div style={{maxWidth:500,margin:"0 auto"}}>
+      <div style={{textAlign:"center",marginBottom:24}}>
+        <img src="/logo.gif" alt="POWER-IT" style={{height:40,marginBottom:10,filter:"invert(1)"}}/>
+        <div style={{display:"inline-block",padding:"3px 10px",background:"#f0fdf4",border:"1px solid #bbf7d0",borderRadius:20,fontSize:8,color:"#059669",fontWeight:700,letterSpacing:2,marginBottom:8}}>POWER-IT × ENERGY.LAB</div>
+        <div style={{fontSize:20,fontWeight:900}}>Energy Comparator</div>
+        <div style={{fontSize:10,color:"#64748b",marginTop:4}}>Fotografa o carica la bolletta del cliente</div>
+      </div>
+
+      {/* Camera buttons */}
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:16}}>
+        <button onClick={()=>camRef.current?.click()} style={{...cd,padding:24,textAlign:"center",cursor:"pointer",border:"2px dashed #059669"}}>
+          <div style={{fontSize:28,marginBottom:6}}>📷</div>
+          <div style={{fontSize:12,fontWeight:700,color:"#059669"}}>FOTOGRAFA</div>
+          <div style={{fontSize:9,color:"#94a3b8"}}>Apri fotocamera</div>
+        </button>
+        <button onClick={()=>fileRef.current?.click()} style={{...cd,padding:24,textAlign:"center",cursor:"pointer",border:"2px dashed #2563eb"}}>
+          <div style={{fontSize:28,marginBottom:6}}>📄</div>
+          <div style={{fontSize:12,fontWeight:700,color:"#2563eb"}}>CARICA FILE</div>
+          <div style={{fontSize:9,color:"#94a3b8"}}>PDF o immagine</div>
+        </button>
+      </div>
+
+      <input ref={camRef} type="file" accept="image/*" capture="environment" style={{display:"none"}} onChange={handleFile}/>
+      <input ref={fileRef} type="file" accept="image/*,application/pdf" multiple style={{display:"none"}} onChange={handleFile}/>
+
+      {/* Photo thumbnails */}
+      {photos.length>0&&<div style={{...cd,padding:14,marginBottom:14}}>
+        <div style={{fontSize:9,fontWeight:700,color:"#059669",letterSpacing:1,marginBottom:8}}>PAGINE BOLLETTA: {photos.length}</div>
+        <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:12}}>
+          {photos.map((p,i)=>(
+            <div key={i} style={{position:"relative",width:70,height:90,borderRadius:6,overflow:"hidden",border:"2px solid #d1d5db"}}>
+              {p.thumb==="PDF"
+                ?<div style={{width:"100%",height:"100%",background:"#fef2f2",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:700,color:"#dc2626"}}>PDF<br/>p.{i+1}</div>
+                :<img src={p.thumb} style={{width:"100%",height:"100%",objectFit:"cover"}}/>}
+              <button onClick={()=>removePhoto(i)} style={{position:"absolute",top:2,right:2,width:18,height:18,borderRadius:"50%",background:"#dc2626",color:"#fff",border:"none",fontSize:10,cursor:"pointer",lineHeight:"18px"}}>×</button>
+              <div style={{position:"absolute",bottom:0,left:0,right:0,background:"rgba(0,0,0,0.6)",color:"#fff",fontSize:8,textAlign:"center",padding:1}}>Pag {i+1}</div>
+            </div>
+          ))}
+          {/* Add more pages button */}
+          <button onClick={()=>camRef.current?.click()} style={{width:70,height:90,borderRadius:6,border:"2px dashed #94a3b8",background:"#f8fafc",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
+            <div style={{fontSize:20}}>+</div>
+            <div style={{fontSize:8,color:"#64748b"}}>Aggiungi<br/>pagina</div>
+          </button>
+        </div>
+        <button onClick={processPhotos} disabled={loading} style={{width:"100%",padding:14,background:"linear-gradient(135deg,#047857,#059669)",border:"none",borderRadius:10,color:"#fff",fontSize:14,fontWeight:800,cursor:"pointer"}}>
+          {loading?loadMsg:"ANALIZZA BOLLETTA →"}
+        </button>
+      </div>}
+
+      {/* Manual entry */}
+      <div style={{textAlign:"center",margin:"14px 0"}}>
+        <div style={{fontSize:10,color:"#94a3b8"}}>— oppure —</div>
+      </div>
+      <button onClick={()=>setStep("review")} style={{width:"100%",padding:12,background:"#fff",border:"1px solid #d1d5db",borderRadius:10,color:"#475569",fontSize:12,fontWeight:600,cursor:"pointer"}}>
+        Inserimento manuale dati bolletta
+      </button>
+
+      {error&&<div style={{marginTop:12,padding:12,background:"#fef2f2",border:"1px solid #fca5a5",borderRadius:8,fontSize:11,color:"#dc2626"}}>Errore: {error}</div>}
+
+      {loading&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:999}}>
+        <div style={{...cd,padding:30,textAlign:"center"}}>
+          <div style={{width:40,height:40,border:"3px solid #ddd",borderTop:"3px solid #059669",borderRadius:"50%",margin:"0 auto 12px",animation:"sp 1s linear infinite"}}/>
+          <div style={{fontSize:14,fontWeight:700}}>{loadMsg}</div>
+        </div>
+        <style>{`@keyframes sp{to{transform:rotate(360deg);}}`}</style>
+      </div>}
+    </div></div>
+  );
+
+  /* ========== REVIEW STEP ========== */
+  if(step==="review")return(
+    <div style={bg}><div style={{maxWidth:560,margin:"0 auto"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+        <div>
+          <img src="/logo.gif" alt="POWER-IT" style={{height:24,filter:"invert(1)",marginBottom:4}}/>
+          <div style={{fontSize:14,fontWeight:800}}>{extracted?"Dati estratti — Verifica":"Inserimento manuale"}</div>
+        </div>
+        <button onClick={reset} style={bt}>← Indietro</button>
+      </div>
+      <div style={{...cd,padding:18}}>
+        <div style={{marginBottom:12}}><label style={lb}>CLIENTE</label><input style={inp} value={f.cliente} onChange={e=>u("cliente",e.target.value)}/></div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:8,marginBottom:12}}>
+          <div><label style={lb}>TIPO</label><select style={inp} value={f.tipo} onChange={e=>u("tipo",e.target.value)}><option value="luce">Luce</option><option value="gas">Gas</option></select></div>
+          <div><label style={lb}>SEGMENTO</label><select style={inp} value={f.seg} onChange={e=>u("seg",e.target.value)}><option value="business">Business</option><option value="domestico">Domestico</option></select></div>
+          <div><label style={lb}>FORNITORE</label><input style={inp} value={f.forn} onChange={e=>u("forn",e.target.value)}/></div>
+          <div><label style={lb}>MESE</label><input style={inp} value={f.mese} onChange={e=>u("mese",e.target.value)}/></div>
+        </div>
+        <div style={{fontSize:9,color:"#d97706",fontWeight:700,letterSpacing:2,margin:"14px 0 8px"}}>VOCI BOLLETTA</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:8}}>
+          <div><label style={lb}>CONSUMO</label><input type="number" style={inp} value={f.consumo} onChange={e=>u("consumo",e.target.value)}/></div>
+          <div><label style={lb}>VENDITA CONS.</label><input type="number" step="0.01" style={inp} value={f.spVC} onChange={e=>u("spVC",e.target.value)}/></div>
+          <div><label style={lb}>Q.FISSA</label><input type="number" step="0.01" style={inp} value={f.qfV} onChange={e=>u("qfV",e.target.value)}/></div>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:8,marginBottom:14}}>
+          <div><label style={lb}>RETE+ONERI</label><input type="number" step="0.01" style={inp} value={f.spR} onChange={e=>u("spR",e.target.value)}/></div>
+          <div><label style={lb}>ACCISE</label><input type="number" step="0.01" style={inp} value={f.acc} onChange={e=>u("acc",e.target.value)}/></div>
+          <div><label style={lb}>IVA</label><input type="number" step="0.01" style={inp} value={f.iva} onChange={e=>u("iva",e.target.value)}/></div>
+          <div><label style={lb}>TOTALE</label><input type="number" step="0.01" style={inp} value={f.tot} onChange={e=>u("tot",e.target.value)}/></div>
+        </div>
+        {annotations.length>0&&<div style={{background:"#fffbeb",border:"1px solid #f59e0b",borderRadius:8,padding:12,marginBottom:14}}>
+          <div style={{fontSize:9,fontWeight:700,color:"#92400e",marginBottom:6}}>⚠ ANNOTAZIONI</div>
+          {annotations.map((a,i)=><div key={i} style={{fontSize:10,color:"#78350f",padding:"3px 0"}}>{a}</div>)}
+        </div>}
+        <button onClick={goSel} style={{width:"100%",padding:14,background:"linear-gradient(135deg,#047857,#059669)",border:"none",borderRadius:10,color:"#fff",fontSize:14,fontWeight:800,cursor:"pointer"}}>CONFRONTA LISTINI →</button>
+      </div>
+    </div></div>
+  );
+
+  /* ========== SELECT STEP ========== */
+  if(step==="select"){
+    const sel=selCte?ac.find(c=>c.cte===selCte):null;
+    const cA=consumo*12;
+    const totP=sel?(sel.gettone+sel.provv*cA):0;
+    const bimP=totP/6;
+    return(
+      <div style={bg}><div style={{maxWidth:780,margin:"0 auto"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+          <div>
+            <img src="/logo.gif" alt="POWER-IT" style={{height:20,filter:"invert(1)"}}/>
+            <div style={{fontSize:16,fontWeight:800}}>{f.cliente||"Cliente"}</div>
+          </div>
+          <div style={{display:"flex",gap:6}}><button onClick={()=>setStep("review")} style={bt}>Modifica</button><button onClick={reset} style={bt}>+ Nuova</button></div>
+        </div>
+        <div style={{fontSize:11,color:"#64748b",marginBottom:12}}>{f.forn} | {f.tipo==="luce"?"⚡":"🔥"} {f.seg} | {consumo.toLocaleString()} {f.tipo==="luce"?"kWh":"Smc"} | {f.mese} | Attuale: <b style={{color:"#dc2626"}}>{fm(totAtt)}</b></div>
+
+        {/* Listini table */}
+        <div style={{...cd,padding:0,marginBottom:14,overflow:"auto"}}>
+          <table style={{width:"100%",borderCollapse:"collapse",fontSize:11,minWidth:600}}>
+            <thead><tr style={{background:"#f0fdf4"}}>{["","CTE","SPR","QF","PREZZO","TOTALE","RISP","TOT€"].map((h,i)=>
+              <th key={i} style={{padding:"8px 4px",textAlign:i<2?"left":"right",color:"#059669",fontSize:8,fontWeight:700,borderBottom:"2px solid #bbf7d0"}}>{h}</th>)}</tr></thead>
+            <tbody>{ac.map((c,i)=>{const is=selCte===c.cte,hr=c.risp>0;return(
+              <tr key={i} onClick={()=>{setSelCte(c.cte);setDocReady(false);}} style={{background:is?"#f0fdf4":"#fff",cursor:"pointer",borderLeft:is?"3px solid #059669":"3px solid transparent"}}>
+                <td style={{padding:"7px 4px"}}><div style={{width:14,height:14,borderRadius:"50%",border:is?"2px solid #059669":"2px solid #cbd5e1",background:is?"#059669":"transparent"}}/></td>
+                <td style={{padding:"7px 4px"}}><b style={{fontSize:13}}>{c.cte}</b><br/><span style={{fontSize:8,color:"#94a3b8"}}>{c.tag}</span></td>
+                <td style={{padding:"7px 4px",textAlign:"right"}}>{c.spread}</td>
+                <td style={{padding:"7px 4px",textAlign:"right"}}>{c.qfix}€</td>
+                <td style={{padding:"7px 4px",textAlign:"right",fontWeight:700}}>{f4(c.pKwh)}</td>
+                <td style={{padding:"7px 4px",textAlign:"right",color:hr?"#059669":"#dc2626",fontWeight:700}}>{fm(c.tot)}</td>
+                <td style={{padding:"7px 4px",textAlign:"right",color:hr?"#059669":"#dc2626",fontWeight:700}}>{fm(c.risp)}</td>
+                <td style={{padding:"7px 4px",textAlign:"right",fontWeight:700}}>{fm(c.gettone+c.provv*cA)}</td>
+              </tr>);})}</tbody></table>
+        </div>
+
+        {sel?<div style={{...cd,padding:16}}>
+          {/* Buttons */}
+          <div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
+            <button onClick={downloadDoc} style={{flex:1,padding:12,background:"#059669",border:"none",borderRadius:8,color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>⬇ PDF CLIENTE</button>
+          </div>
+
+          {/* Comparison */}
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
+            <div style={{background:"#fef2f2",borderRadius:8,padding:12,border:"2px solid #dc2626"}}>
+              <div style={{fontSize:9,color:"#dc2626",fontWeight:700,marginBottom:4}}>ATTUALE</div>
+              <div style={{fontSize:22,fontWeight:900,color:"#dc2626"}}>{fm(totAtt)}</div>
+            </div>
+            <div style={{background:"#f0fdf4",borderRadius:8,padding:12,border:"2px solid #059669"}}>
+              <div style={{fontSize:9,color:"#059669",fontWeight:700,marginBottom:4}}>ENERGY.LAB — {sel.cte}</div>
+              <div style={{fontSize:22,fontWeight:900,color:"#059669"}}>{fm(sel.tot)}</div>
+            </div>
+          </div>
+
+          {/* Risparmio */}
+          <div style={{background:sel.risp>0?"#059669":"#d97706",borderRadius:10,padding:14,textAlign:"center",marginBottom:14}}>
+            <div style={{fontSize:9,fontWeight:700,color:"#fff",opacity:.7}}>RISPARMIO CLIENTE</div>
+            <div style={{fontSize:30,fontWeight:900,color:"#fff"}}>{fm(Math.abs(sel.risp))}</div>
+            <div style={{fontSize:12,color:"#fff",opacity:.85}}>{sel.risp>0?fP(sel.risp/totAtt*100)+" risparmio":""}</div>
+          </div>
+
+          {/* Commission split */}
+          <div style={{fontSize:10,fontWeight:700,letterSpacing:2,marginBottom:8}}>PROVVIGIONI</div>
+          <div style={{background:"#f8fafc",borderRadius:10,padding:12,marginBottom:12,border:"1px solid #d1d5db"}}>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:8}}>
+              <div><label style={{...lb,color:"#059669"}}>POWER-IT %</label><input type="number" min="0" max="100" style={{...inp,textAlign:"center",fontWeight:700,fontSize:18}} value={pwPct} onChange={e=>handlePw(e.target.value)}/></div>
+              <div><label style={{...lb,color:"#2563eb"}}>AGENTE %</label><input type="number" min="0" max="100" style={{...inp,textAlign:"center",fontWeight:700,fontSize:18}} value={agPct} onChange={e=>handleAg(e.target.value)}/></div>
+              <div><label style={{...lb,color:"#d97706"}}>SUB-AG. %</label><input type="number" style={{...inp,textAlign:"center",fontWeight:700,fontSize:18,background:"#e2e8f0"}} value={saPct} readOnly/></div>
+            </div>
+            <div style={{height:8,borderRadius:4,background:"#e2e8f0",display:"flex",overflow:"hidden"}}>
+              <div style={{width:pwPct+"%",background:"#059669"}}/>
+              <div style={{width:agPct+"%",background:"#2563eb"}}/>
+              <div style={{width:saPct+"%",background:"#d97706"}}/>
+            </div>
+          </div>
+
+          {/* Totals */}
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:6,marginBottom:12}}>
+            {[["GETTONE",sel.gettone],["PROVV/A",sel.provv*cA],["TOT ANNO",totP],["BIMEST.",bimP]].map(([t,v],i)=>(
+              <div key={i} style={{background:i>=2?"#f0fdf4":"#f8fafc",borderRadius:8,padding:8,textAlign:"center",border:i>=2?"2px solid #059669":"1px solid #d1d5db"}}>
+                <div style={{fontSize:7,color:"#475569",fontWeight:700}}>{t}</div>
+                <div style={{fontSize:18,fontWeight:800,fontFamily:nf}}>{fm(v)}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Per-role breakdown */}
+          {[["POWER-IT",pwPct,"#059669","rgba(5,150,105,0.06)"],["AGENTE",agPct,"#2563eb","rgba(37,99,235,0.06)"],["SUB-AGENTE",saPct,"#d97706","rgba(217,119,6,0.06)"]].filter(r=>r[1]>0).map(([label,pct,col,bgc],i)=>(
+            <div key={i} style={{background:bgc,border:"2px solid "+col,borderRadius:10,padding:10,marginBottom:8}}>
+              <div style={{fontSize:10,fontWeight:700,color:col,marginBottom:6}}>{label} — {pct}%</div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:4}}>
+                {[["Gettone",sel.gettone*pct/100],["Provv",sel.provv*cA*pct/100],["Tot anno",totP*pct/100],["Bimest.",bimP*pct/100]].map(([t,v],j)=>(
+                  <div key={j} style={{textAlign:"center"}}>
+                    <div style={{fontSize:7,color:"#64748b"}}>{t}</div>
+                    <div style={{fontSize:15,fontWeight:800,color:j===3?col:"#1e293b",fontFamily:nf}}>{fm(v)}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+
+          {/* Passa a Energy.Lab button */}
+          <button onClick={()=>{
+            const slug=(f.cliente||"Cliente").replace(/ /g,"_");
+            const html=genDoc(sel,f,totAtt,consumo);
+            openPrint(html);
+          }} style={{width:"100%",padding:16,background:"linear-gradient(135deg,#047857,#059669)",border:"none",borderRadius:12,color:"#fff",fontSize:14,fontWeight:800,cursor:"pointer",marginTop:12}}>
+            🔄 PASSA A ENERGY.LAB
+          </button>
+
+        </div>:<div style={{...cd,padding:20,textAlign:"center",color:"#94a3b8",fontSize:13}}>Seleziona un listino dalla tabella</div>}
+      </div></div>
+    );
+  }
+  return null;
+}
+
+ReactDOM.render(React.createElement(App),document.getElementById("root"));
+
+/* Register service worker */
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('/sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>
