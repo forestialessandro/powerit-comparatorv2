@@ -2,7 +2,7 @@
   "name": "POWER-IT Task Manager",
   "short_name": "POWER-IT Task",
   "description": "Scorciatoia al task manager POWER-IT (TO-DO)",
-  "start_url": "/task.html",
+  "start_url": "/task.html?go=1",
   "display": "browser",
   "background_color": "#ffffff",
   "theme_color": "#ffffff",
