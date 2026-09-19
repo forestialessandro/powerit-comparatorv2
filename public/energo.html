@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Collega Energo</title>
+<meta name="apple-mobile-web-app-title" content="Collega Energo"/>
+<meta name="theme-color" content="#141414"/>
+<link rel="apple-touch-icon" sizes="180x180" href="/task-icon-180.png"/>
+<style>
+:root{
+  --bg:#141414;--card:rgba(255,255,255,.04);--line:rgba(194,168,130,.35);
+  --txt:#F2EFE8;--muted:rgba(242,239,232,.6);--gold:#C2A882;--bolt:#FDC208;
+  --ok:#5BA88B;--ko:#E0584F;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--txt);
+     padding:24px 16px 60px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+h1{font-size:1.35rem;font-weight:700;letter-spacing:.02em}
+h1 span{color:var(--bolt)}
+p.sub{color:var(--muted);font-size:.9rem}
+section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+h2{font-size:.78rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:10px}
+label{display:block;font-size:.8rem;color:var(--muted);margin:10px 0 4px}
+input,textarea{width:100%;background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:9px;
+  color:var(--txt);font:inherit;font-size:.9rem;padding:10px 12px;word-break:break-all}
+textarea{min-height:88px;resize:vertical;font-family:ui-monospace,Menlo,monospace;font-size:.78rem}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+button{font:inherit;font-weight:600;font-size:.88rem;border:1px solid var(--gold);border-radius:999px;
+  padding:10px 18px;background:transparent;color:var(--gold);cursor:pointer}
+button.solid{background:var(--gold);color:#141414;border-color:var(--gold)}
+button:active{opacity:.7}
+.stato{display:flex;align-items:center;gap:9px;font-size:.92rem;font-weight:600}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--muted);flex:none}
+.dot.ok{background:var(--ok)}.dot.ko{background:var(--ko)}
+.det{color:var(--muted);font-size:.82rem;margin-top:6px}
+ol{margin:6px 0 0 18px;font-size:.88rem;color:var(--muted)}
+ol li{margin:6px 0}
+ol b{color:var(--txt)}
+code{background:rgba(0,0,0,.4);border-radius:5px;padding:1px 5px;font-size:.82em;word-break:break-all}
+a.bm{display:inline-block;margin-top:10px;padding:10px 18px;border-radius:999px;background:var(--bolt);
+  color:#141414;font-weight:700;text-decoration:none;font-size:.88rem}
+pre{background:rgba(0,0,0,.45);border:1px solid var(--line);border-radius:9px;padding:10px;
+  font-size:.72rem;overflow:auto;max-height:220px;white-space:pre-wrap;word-break:break-all;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div>
+    <h1>Collega <span>Energo</span></h1>
+    <p class="sub">Passa la sessione di pit.energo.top al server, così il pulsante «Aggiorna da Energo» della Dashboard rent funziona da qualsiasi dispositivo — iPhone compreso.</p>
+  </div>
+
+  <section>
+    <h2>1 · Chiave</h2>
+    <label for="key">Chiave privata (env var <code>PIT_KEY</code> su Netlify)</label>
+    <input id="key" type="password" autocomplete="off" placeholder="la chiave che hai messo su Netlify"/>
+    <div class="row">
+      <button id="save" class="solid">Salva su questo dispositivo</button>
+      <button id="check">Controlla stato</button>
+    </div>
+    <div class="stato" style="margin-top:14px"><span id="dot" class="dot"></span><span id="txt">Stato sconosciuto</span></div>
+    <div class="det" id="det"></div>
+  </section>
+
+  <section>
+    <h2>2 · Bookmarklet (dal Mac, su Chrome loggato)</h2>
+    <p class="sub">Trascina il bottone nella barra dei preferiti di Chrome. Poi, su una scheda di <code>pit.energo.top</code> dove sei loggato, cliccalo: manda qui il token. Da quel momento l'iPhone aggiorna da solo, finché il token non scade.</p>
+    <a class="bm" id="bm" href="#">⚡ Collega Energo</a>
+    <div class="row">
+      <button id="copyjs">Copia il codice JS</button>
+    </div>
+    <p class="sub" style="margin-top:10px">Da iPhone: Comandi Rapidi → «Esegui JavaScript sulla pagina web» → incolla il codice → eseguilo dal tasto Condividi di Safari mentre sei su pit.energo.top.</p>
+  </section>
+
+  <section>
+    <h2>3 · Oppure incolla il token a mano</h2>
+    <p class="sub">Su pit.energo.top: Console → <code>JSON.parse(localStorage[Object.keys(localStorage).find(k=&gt;/COMMON__LOCAL__KEY__/.test(k))]).value.TOKEN__.value</code></p>
+    <label for="tok">Token (Bearer eyJ…)</label>
+    <textarea id="tok" placeholder="Bearer eyJhbGciOi..."></textarea>
+    <label for="oid">oid (opzionale)</label>
+    <input id="oid" inputmode="numeric" placeholder="8938"/>
+    <div class="row"><button id="send" class="solid">Invia token</button></div>
+  </section>
+
+  <section>
+    <h2>4 · Prova</h2>
+    <p class="sub">Chiama <code>/api/energo-sync</code> come farebbe il pulsante della dashboard.</p>
+    <div class="row">
+      <button id="test" class="solid">Prova aggiornamento</button>
+      <button id="testraw">Campi grezzi</button>
+    </div>
+    <pre id="out" hidden></pre>
+  </section>
+
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const KEY_LS = 'pit_key';
+
+function key(){ return $('key').value.trim(); }
+function api(path, opts){
+  return fetch(path + (path.includes('?') ? '&' : '?') + 'k=' + encodeURIComponent(key()), opts);
+}
+function show(obj){ const o = $('out'); o.hidden = false; o.textContent = typeof obj === 'string' ? obj : JSON.stringify(obj, null, 2); }
+
+// Il codice che gira su pit.energo.top: legge il token dal localStorage e lo spedisce qui.
+function bookmarkletJS(){
+  const url = location.origin + '/api/energo-token';
+  const k = key();
+  return "(function(){try{var r=null;for(var i=0;i<localStorage.length;i++){var n=localStorage.key(i);" +
+    "if(/COMMON__LOCAL__KEY__/.test(n)){r=localStorage.getItem(n);break}}" +
+    "if(!r)return alert('Sessione Energo non trovata: sei loggato su pit.energo.top?');" +
+    "var v=JSON.parse(r).value||{};var g=function(x){return x&&x.value!==undefined?x.value:x};" +
+    "var t=g(v.TOKEN__),o=g(v.OID__)||'';" +
+    "if(!t)return alert('Token non trovato nella sessione.');" +
+    "fetch(" + JSON.stringify(url) + ",{method:'POST',headers:{'Content-Type':'application/json','x-pit-key':" + JSON.stringify(k) + "},body:JSON.stringify({token:t,oid:o})})" +
+    ".then(function(r){return r.json()}).then(function(d){alert(d.ok?'Energo collegato \\u2713'+(d.scadeIl?'\\nScade: '+d.scadeIl:''):'Errore: '+JSON.stringify(d))})" +
+    ".catch(function(e){alert('Errore: '+e)})}catch(e){alert('Errore: '+e)}})()";
+}
+function refreshBookmarklet(){ $('bm').href = 'javascript:' + encodeURIComponent(bookmarkletJS()); }
+
+$('save').onclick = () => {
+  localStorage.setItem(KEY_LS, key());
+  refreshBookmarklet();
+  stato();
+};
+$('check').onclick = stato;
+$('copyjs').onclick = async () => {
+  try { await navigator.clipboard.writeText(bookmarkletJS()); $('copyjs').textContent = 'Copiato ✓'; }
+  catch { show(bookmarkletJS()); }
+  setTimeout(() => ($('copyjs').textContent = 'Copia il codice JS'), 2000);
+};
+
+async function stato(){
+  if (!key()) return setStato(null, 'Inserisci la chiave');
+  try {
+    const r = await api('/api/energo-token');
+    const d = await r.json();
+    if (!r.ok) return setStato(false, d.error || ('HTTP ' + r.status));
+    if (!d.collegato) return setStato(false, 'Nessun token collegato');
+    setStato(!d.scaduto, d.scaduto ? 'Token scaduto — ricollega' : 'Energo collegato',
+      [d.oid ? 'oid ' + d.oid : '', d.scadeIl ? 'scade ' + new Date(d.scadeIl).toLocaleString('it-IT') : '',
+       d.salvatoIl ? 'salvato ' + new Date(d.salvatoIl).toLocaleString('it-IT') : ''].filter(Boolean).join(' · '));
+  } catch (e) { setStato(false, 'Errore: ' + e.message); }
+}
+function setStato(ok, msg, det){
+  $('dot').className = 'dot' + (ok === true ? ' ok' : ok === false ? ' ko' : '');
+  $('txt').textContent = msg;
+  $('det').textContent = det || '';
+}
+
+$('send').onclick = async () => {
+  const token = $('tok').value.trim();
+  if (!token) return show('Incolla prima il token.');
+  const r = await api('/api/energo-token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token, oid: $('oid').value.trim() }),
+  });
+  show(await r.json());
+  stato();
+};
+
+async function prova(raw){
+  show('Aggiornamento in corso…');
+  try {
+    const r = await api('/api/energo-sync' + (raw ? '?raw=1' : ''));
+    const d = await r.json();
+    show(raw || !d.cabs ? d : { esito: 'ok', ...d.meta, primaMacchina: d.cabs[0], ultimoNoleggio: d.ords[0] });
+  } catch (e) { show('Errore: ' + e.message); }
+}
+$('test').onclick = () => prova(false);
+$('testraw').onclick = () => prova(true);
+
+$('key').value = localStorage.getItem(KEY_LS) || '';
+$('key').oninput = refreshBookmarklet;
+refreshBookmarklet();
+if ($('key').value) stato();
+</script>
+</body>
+</html>
