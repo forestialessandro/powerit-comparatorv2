@@ -1,5 +1,8 @@
 {
   "name": "powerit-energy-comparator",
-  "version": "8.0.0",
-  "private": true
+  "version": "8.1.0",
+  "private": true,
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0"
+  }
 }
