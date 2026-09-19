@@ -2,6 +2,7 @@
 
 const STORE_NAME = 'energo';
 const TOKEN_KEY = 'session';
+const APIKEY_KEY = 'apikey';
 
 // Basi API provate in ordine. La memoria di progetto riporta due varianti
 // (backend.energo.vip storica, pit.energo.top/api dal 16/9): le proviamo entrambe.
@@ -25,10 +26,34 @@ export function json(body, status = 200, extra = {}) {
   });
 }
 
-// La chiave protegge gli endpoint: senza PIT_KEY configurata non si passa (fail closed).
-export function checkKey(req) {
-  const expected = Netlify.env.get('PIT_KEY');
-  if (!expected) return { ok: false, res: json({ error: 'PIT_KEY non configurata nelle env var Netlify' }, 500) };
+// La chiave protegge gli endpoint. Può arrivare dalla env var PIT_KEY oppure,
+// se non c'è, essere rivendicata una sola volta dal primo che apre /energo.html
+// (così non serve configurare nulla su Netlify). Senza chiave non si passa.
+export async function getApiKey() {
+  const env = Netlify.env.get('PIT_KEY');
+  if (env) return { key: env, fonte: 'env' };
+  const store = await blobStore();
+  if (store) {
+    const rec = await store.get(APIKEY_KEY, { type: 'json' });
+    if (rec && rec.key) return { key: rec.key, fonte: 'claim', claimedAt: rec.claimedAt };
+  }
+  return { key: null, fonte: null };
+}
+
+export async function claimApiKey(key) {
+  const cur = await getApiKey();
+  if (cur.key) return { ok: false, motivo: 'già inizializzato', fonte: cur.fonte };
+  const store = await blobStore();
+  if (!store) return { ok: false, motivo: 'storage non disponibile' };
+  await store.setJSON(APIKEY_KEY, { key, claimedAt: Date.now() });
+  return { ok: true };
+}
+
+export async function checkKey(req) {
+  const { key: expected } = await getApiKey();
+  if (!expected) {
+    return { ok: false, res: json({ error: 'non_inizializzato', rimedio: 'apri /energo.html per inizializzare' }, 428) };
+  }
   const url = new URL(req.url);
   const given = req.headers.get('x-pit-key') || url.searchParams.get('k') || '';
   if (given !== expected) return { ok: false, res: json({ error: 'chiave non valida' }, 401) };

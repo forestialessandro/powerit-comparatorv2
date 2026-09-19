@@ -10,7 +10,7 @@ import { json, corsHeaders, checkKey, saveToken, clearToken, loadToken, tokenExp
 export default async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { status: 200, headers: corsHeaders('GET, POST, DELETE, OPTIONS') });
 
-  const key = checkKey(req);
+  const key = await checkKey(req);
   if (!key.ok) return key.res;
 
   if (req.method === 'GET') {

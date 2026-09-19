@@ -8,15 +8,17 @@
  * Il server fa la chiamata a Energo: niente CORS, niente sessione nel browser,
  * funziona identico da Mac, iPhone e PWA in home screen.
  */
-(function (global) {
-  var BASE = (global.PIT_BASE || 'https://powerit-comparatorv2.netlify.app').replace(/\/$/, '');
+(function (global, script) {
+  // Base dedotta dall'indirizzo di questo script: nessun dominio scritto a mano.
+  var BASE = (global.PIT_BASE || (script && script.src ? script.src.replace(/\/[^/]*$/, '') : '')).replace(/\/$/, '');
   var LS_KEY = 'pit_key';
 
   function chiave() {
     var k = '';
     try { k = localStorage.getItem(LS_KEY) || ''; } catch (e) {}
     if (!k) {
-      k = (prompt('Chiave POWER-IT (una volta sola su questo dispositivo):') || '').trim();
+      k = (prompt('Incolla il link personale (o la chiave) da ' + BASE + '/energo.html :') || '').trim();
+      if (k.indexOf('k=') >= 0) k = decodeURIComponent(k.split('k=')[1].split('&')[0]);
       if (k) { try { localStorage.setItem(LS_KEY, k); } catch (e) {} }
     }
     return k;
@@ -76,4 +78,4 @@
   }
 
   global.PIT = Object.assign(global.PIT || {}, { base: BASE, sync: sync, stato: stato, aggiornaDaEnergo: aggiornaDaEnergo });
-})(window);
+})(window, document.currentScript);

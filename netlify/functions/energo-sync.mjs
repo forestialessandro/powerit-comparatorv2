@@ -12,7 +12,7 @@ import { json, corsHeaders, checkKey, loadToken, fetchAll, normCabinet, normOrde
 export default async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { status: 200, headers: corsHeaders() });
 
-  const key = checkKey(req);
+  const key = await checkKey(req);
   if (!key.ok) return key.res;
 
   const url = new URL(req.url);
