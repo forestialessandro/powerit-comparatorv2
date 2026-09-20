@@ -50,6 +50,7 @@ button,.btn{font:inherit;font-weight:600;font-size:.92rem;border-radius:999px;pa
 button.big{width:100%;font-size:1.02rem;font-weight:700;padding:16px 20px;
   background:var(--bolt);color:#141414;border-color:var(--bolt)}
 button.big:disabled{opacity:.55}
+button.solid{background:var(--gold);color:#141414;border-color:var(--gold)}
 .btn.bolt{background:var(--bolt);color:#141414;border-color:var(--bolt);font-weight:700}
 .row{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}
 .row>*{flex:1 1 auto}
@@ -114,6 +115,20 @@ pre{background:rgba(0,0,0,.45);border:1px solid var(--line);border-radius:10px;p
       <textarea id="tok" placeholder="Bearer eyJhbGciOi..."></textarea>
       <div class="row"><button id="send">Invia token</button></div>
     </details>
+  </div>
+
+  <div class="card" id="iphone">
+    <h2>Ricollega dall'iPhone (senza Mac)</h2>
+    <p class="note">Da preparare <b>una volta sola</b>, con calma. Serve il giorno che Energo chiude la sessione e tu non sei davanti al Mac: ti rimette in piedi in mezzo minuto, ovunque sei.</p>
+    <ol>
+      <li>Apri l'app <b>Comandi Rapidi</b> → <b>+</b> → cerca l'azione <b>«Esegui JavaScript sulla pagina web»</b> e aggiungila.</li>
+      <li>Premi il pulsante qui sotto, poi <b>incolla</b> dentro l'azione al posto del testo di esempio.</li>
+      <li>In alto tocca la <b>(i)</b> e accendi <b>«Mostra nel foglio Condividi»</b>.</li>
+      <li>Chiamalo <b>Collega Energo</b> e salva.</li>
+    </ol>
+    <div class="row"><button id="copyios" class="solid">Copia il comando per iPhone</button></div>
+    <p class="note" style="margin-top:12px"><b>Il giorno che serve:</b> apri <b>pit.energo.top</b> in Safari, entra col tuo account, poi <b>Condividi → Collega Energo</b>. Torna qui: è ricollegato.</p>
+    <p class="note" style="margin-top:8px;color:var(--warn)">⚠️ Entrando da iPhone butti fuori il Mac. Usalo come ripiego, non come abitudine.</p>
   </div>
 
   <div class="card">
@@ -314,6 +329,7 @@ async function copia(testo, btn, ok){
 
 $('go').onclick = aggiorna;
 $('copyprompt').onclick = (e) => copia(promptClaude(), e.currentTarget, 'Copiato ✓');
+$('copyios').onclick = (e) => copia(jsCollega(), e.currentTarget, 'Copiato ✓ — ora incollalo nel Comando Rapido');
 $('copylink').onclick = (e) => copia(location.origin + '/energo.html?k=' + KEY, e.currentTarget, 'Copiato ✓');
 $('showlink').onclick = () => {
   const i = $('linkout');

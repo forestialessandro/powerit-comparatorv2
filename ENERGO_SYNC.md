@@ -62,6 +62,13 @@ indipendenti dall'uso — il JWT non porta `exp`). Di conseguenza:
   keep-alive e carica la fotografia su `/api/energo-data`: così il dato resta
   fresco anche mentre il token è morto.
 - Loggarsi a Energo dall'iPhone **espelle il Mac**: farlo solo come ripiego.
+- `/energo.html` porta il comando pronto per il Comando Rapido iOS: con quello si
+  ricollega dal telefono in mezzo minuto, senza Mac, il giorno che la sessione cade.
+
+Non esiste modo di rendere la sessione permanente senza il token API che Energo
+vende a parte: è il loro progetto, non un difetto aggirabile. Quello che si può
+fare — ed è quello che fa questo codice — è non restare mai senza dati e potersi
+ricollegare in pochi secondi da qualsiasi dispositivo.
 
 ## Aggancio nella Dashboard rent
 
