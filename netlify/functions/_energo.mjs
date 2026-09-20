@@ -3,6 +3,7 @@
 const STORE_NAME = 'energo';
 const TOKEN_KEY = 'session';
 const APIKEY_KEY = 'apikey';
+const SNAP_KEY = 'snapshot';
 
 // Basi API provate in ordine. La memoria di progetto riporta due varianti
 // (backend.energo.vip storica, pit.energo.top/api dal 16/9): le proviamo entrambe.
@@ -111,6 +112,24 @@ export async function loadToken() {
     return { token: normalizeToken(envToken), oid: String(Netlify.env.get('ENERGO_OID') || ''), savedAt: null, source: 'env' };
   }
   return null;
+}
+
+// ------------------------------------------------------- ultimo dato buono
+// Energo chiude la sessione appena l'account entra da un'altra parte, quindi il
+// token può essere morto in qualsiasi momento. Teniamo l'ultima fotografia
+// riuscita: il telefono mostra sempre qualcosa, datato, invece di un errore.
+
+export async function saveSnapshot(snap) {
+  const store = await blobStore();
+  if (!store) return false;
+  await store.setJSON(SNAP_KEY, snap);
+  return true;
+}
+
+export async function loadSnapshot() {
+  const store = await blobStore();
+  if (!store) return null;
+  return store.get(SNAP_KEY, { type: 'json' });
 }
 
 // ---------------------------------------------------------------- chiamate API

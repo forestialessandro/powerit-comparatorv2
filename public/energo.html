@@ -199,14 +199,12 @@ async function stato(){
     const r = await api('/api/energo-token');
     const d = await r.json();
     if (!r.ok) { setStato(false, d.error === 'chiave non valida' ? 'Chiave non valida' : (d.error || 'Errore'), ''); $('go').disabled = true; return; }
+    // Il pulsante resta sempre attivo: se Energo non risponde arriva comunque
+    // l'ultima fotografia buona.
+    $('go').disabled = false;
     if (!d.collegato) {
-      setStato('warn', 'Energo non ancora collegato', 'Fai il passaggio qui sotto, una volta sola.');
-      $('go').disabled = true; $('collega').classList.remove('hide');
-      return;
-    }
-    if (d.scaduto) {
-      setStato(false, 'Sessione Energo scaduta', 'Ricollega dal Mac: stessa procedura.');
-      $('go').disabled = false; $('collega').classList.remove('hide');
+      setStato('warn', 'Energo non collegato', 'Vedrai gli ultimi dati salvati. Per i dati in diretta fai il passaggio qui sotto.');
+      $('collega').classList.remove('hide');
       return;
     }
     setStato(true, 'Energo collegato',
@@ -223,6 +221,14 @@ async function stato(){
 /* ---------------------------------------------------------------- aggiorna */
 
 const eur = (n) => '€ ' + n.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+
+const quando = (ms) => {
+  const m = Math.round((Date.now() - ms) / 60000);
+  if (m < 2) return 'adesso';
+  if (m < 60) return m + ' minuti fa';
+  const h = Math.round(m / 60);
+  return h < 24 ? h + (h === 1 ? ' ora fa' : ' ore fa') : Math.round(h / 24) + ' giorni fa';
+};
 
 function mostra(d){
   const ora = Date.now(), sette = ora - 7 * 864e5;
@@ -242,7 +248,7 @@ function mostra(d){
   $('t-inc-sub').textContent = ult7.length ? 'scontrino medio ' + eur(inc7 / ult7.length) : ' ';
   $('t-when').innerHTML = dt.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) +
     ' <small>' + dt.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' }) + '</small>';
-  $('t-when-sub').textContent = d.meta.noleggi + ' noleggi in archivio';
+  $('t-when-sub').textContent = quando(d.fetchedAt) + (d.meta.fonte === 'mac' ? ' · dal Mac' : '');
 }
 
 async function aggiorna(){
@@ -257,8 +263,15 @@ async function aggiorna(){
       throw new Error(d.error || ('HTTP ' + r.status));
     }
     mostra(d);
-    b.textContent = '✓ Aggiornato';
-    setTimeout(() => { b.textContent = '🔄 Aggiorna da Energo'; }, 2500);
+    if (d.stale) {
+      // Energo ci ha chiusi fuori: mostriamo comunque l'ultimo dato buono, datato.
+      b.textContent = '⚠ dati di ' + quando(d.fetchedAt);
+      setStato('warn', 'Energo non risponde adesso',
+        'Vedi l\'ultima fotografia buona, di ' + quando(d.fetchedAt) + '. Il Mac la rinfresca da solo appena rientra.');
+    } else {
+      b.textContent = '✓ Aggiornato';
+    }
+    setTimeout(() => { b.textContent = '🔄 Aggiorna da Energo'; }, 3000);
   } catch (e) {
     b.textContent = '🔄 Aggiorna da Energo';
     $('out').classList.remove('hide');
