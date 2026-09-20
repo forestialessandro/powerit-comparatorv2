@@ -1,13 +1,38 @@
 // È quello che sta dietro al pulsante "Aggiorna da Energo" della Dashboard rent.
-// Legge il token salvato, interroga Energo lato server (niente CORS, niente browser
-// loggato) e restituisce i dati nella stessa forma di sk_energo.json:
+// Interroga Energo lato server (niente CORS, niente browser loggato) e restituisce
+// i dati nella stessa forma di sk_energo.json:
 //
 //   { cabs:[...], ords:[...], fetchedAt: <ms>, meta:{...} }
 //
-//   GET /api/energo-sync?k=...            → dati normalizzati
+// Energo chiude la sessione appena l'account entra da un'altra parte: quando il
+// token è morto NON si risponde con un errore, si restituisce l'ultima fotografia
+// riuscita con stale:true e la sua data. Il telefono mostra sempre qualcosa.
+//
+//   GET /api/energo-sync?k=...            → dati (freschi, o ultimi buoni)
 //   GET /api/energo-sync?k=...&raw=1      → risposta grezza Energo (per verificare i campi)
+//   GET /api/energo-sync?k=...&live=1     → solo dati freschi: errore se il token è morto
 
-import { json, corsHeaders, checkKey, loadToken, fetchAll, normCabinet, normOrder, tokenExpiry } from './_energo.mjs';
+import {
+  json, corsHeaders, checkKey, loadToken, fetchAll,
+  normCabinet, normOrder, tokenExpiry, saveSnapshot, loadSnapshot,
+} from './_energo.mjs';
+
+// L'ultima fotografia buona, marcata come tale.
+async function fallback(motivo) {
+  const snap = await loadSnapshot();
+  if (!snap) {
+    return json(
+      { error: motivo, rimedio: 'ricollega la sessione Energo da /energo.html', stale: true, cabs: [], ords: [] },
+      motivo === 'token_scaduto' ? 401 : 428
+    );
+  }
+  return json({
+    ...snap,
+    stale: true,
+    staleMotivo: motivo,
+    meta: { ...snap.meta, eta: Date.now() - snap.fetchedAt },
+  });
+}
 
 export default async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { status: 200, headers: corsHeaders() });
@@ -17,12 +42,11 @@ export default async (req) => {
 
   const url = new URL(req.url);
   const raw = url.searchParams.get('raw') === '1';
+  const live = url.searchParams.get('live') === '1';
   const ordSize = Math.min(Number(url.searchParams.get('ordini') || 500), 1000);
 
   const rec = await loadToken();
-  if (!rec) {
-    return json({ error: 'nessun token Energo collegato', rimedio: 'apri /energo.html e ricollega la sessione' }, 428);
-  }
+  if (!rec) return live ? json({ error: 'nessun token collegato' }, 428) : fallback('nessun_token');
 
   const auth = { token: rec.token, oid: rec.oid };
 
@@ -45,7 +69,7 @@ export default async (req) => {
     const ords = orders.rows.map(normOrder).sort((a, b) => b.t - a.t);
     const exp = tokenExpiry(rec.token);
 
-    return json({
+    const snap = {
       cabs,
       ords,
       fetchedAt: Date.now(),
@@ -55,16 +79,15 @@ export default async (req) => {
         noleggi: ords.length,
         incassoTotale: Number(ords.reduce((s, o) => s + o.pay, 0).toFixed(2)),
         tokenScadeIl: exp ? new Date(exp).toISOString() : null,
+        fonte: 'energo',
       },
-    });
+    };
+    await saveSnapshot(snap);
+    return json({ ...snap, stale: false });
   } catch (e) {
-    if (e.code === 'TOKEN_SCADUTO') {
-      return json(
-        { error: 'token_scaduto', messaggio: 'La sessione Energo è scaduta.', rimedio: 'apri /energo.html dal Mac loggato su pit.energo.top e ricollega' },
-        401
-      );
-    }
-    return json({ error: 'sync fallita: ' + e.message }, 502);
+    const motivo = e.code === 'TOKEN_SCADUTO' ? 'token_scaduto' : 'energo_irraggiungibile';
+    if (live) return json({ error: motivo, messaggio: e.message }, motivo === 'token_scaduto' ? 401 : 502);
+    return fallback(motivo);
   }
 };
 

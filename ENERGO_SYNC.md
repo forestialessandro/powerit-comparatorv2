@@ -19,6 +19,9 @@ iPhone ──▶ /api/energo-sync ──▶ pit.energo.top/api  (token salvato l
 | `GET`/`POST` `/api/energo-setup` | stato / rivendicazione della chiave alla prima apertura |
 | `GET /api/energo-sync` | dati freschi: `{cabs, ords, fetchedAt, meta}` (stessa forma di `sk_energo.json`) |
 | `GET /api/energo-sync?raw=1` | un cabinet e un ordine grezzi, per verificare i nomi dei campi |
+| `GET /api/energo-sync?live=1` | solo dati freschi: errore invece della fotografia vecchia |
+| `POST /api/energo-data` | il Mac carica la fotografia che già scarica ogni 15 minuti |
+| `GET /api/energo-data` | età dell'ultima fotografia salvata |
 
 Tutte richiedono la chiave: header `x-pit-key` o `?k=…`.
 
@@ -46,7 +49,19 @@ Env var opzionali su Netlify:
    In alternativa la pagina genera il messaggio pronto per Claude sul Mac.
 3. «Copia il mio link» → aprilo sull'iPhone. Da lì in poi il pulsante basta e avanza.
 
-Quando il token scade, la sync risponde `401 token_scaduto`: si rifà solo il passo 2.
+## Quando Energo chiude la sessione
+
+Non è una scadenza a tempo: il backend tiene **una sola sessione per account** e
+la chiude appena si entra da un'altra parte (osservate durate da 9 minuti a 7 ore,
+indipendenti dall'uso — il JWT non porta `exp`). Di conseguenza:
+
+- `/api/energo-sync` **non fallisce**: se il token è morto restituisce l'ultima
+  fotografia riuscita con `stale: true` e la sua data. Il telefono mostra sempre
+  qualcosa, datato. `?live=1` per volere invece l'errore.
+- Il Mac, che tiene la sessione viva, ripubblica il token a ogni giro di
+  keep-alive e carica la fotografia su `/api/energo-data`: così il dato resta
+  fresco anche mentre il token è morto.
+- Loggarsi a Energo dall'iPhone **espelle il Mac**: farlo solo come ripiego.
 
 ## Aggancio nella Dashboard rent
 
